@@ -1275,18 +1275,34 @@ body {
   font-size: 0.85rem;
 }
 
-/* Barra de ação (Voltar/Confirmar) fixa no rodapé da viewport — a grade acima
-   pode ter até 151 Pokémon e crescer bastante, então o botão de confirmar
-   precisa continuar acessível sem depender de rolar até o fim da lista. */
 .deckbuilder-actions {
   display: flex;
   gap: 10px;
   margin-top: 1rem;
-  position: sticky;
-  bottom: 0;
-  background: var(--ink-panel);
-  padding: 10px 0 4px;
-  border-top: 1px solid var(--surface-border);
+}
+
+/* Em telas estreitas a grade de escolha (até 151 Pokémon) fica bem mais alta
+   que a viewport. `position: sticky` aqui dentro do menu-card gruda cedo
+   demais e flutua por cima das cartas no meio da rolagem — em vez disso,
+   fixa a barra na viewport de verdade e reserva espaço embaixo do card pra
+   nada da grade ficar escondido atrás dela. */
+@media (max-width: 768px) {
+  #screen-deckbuilder .menu-card {
+    padding-bottom: 96px;
+  }
+
+  .deckbuilder-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    margin-top: 0;
+    background: var(--ink-panel);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--surface-border);
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .pokedex-mini-art {
