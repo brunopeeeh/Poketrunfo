@@ -149,6 +149,13 @@ export function initUI() {
   }
 
   showScreen('menu');
+
+  // Helper para testar ou rever a cerimônia de abertura do Starter Pack
+  window.testStarterPack = () => {
+    const testCards = generateStarterPack(20);
+    setupStarterModal(testCards);
+    openModal(modals.starter);
+  };
 }
 
 function updateMuteButtonLabel() {
@@ -2098,25 +2105,137 @@ function renderCollectionInspector(card, isOwned, unevolvedCount) {
 }
 
 // ==========================================================================
-// Starter Pack Modal (Boas-vindas com 20 cartas)
+// Starter Pack Modal (Boas-vindas com Abertura Interativa de Booster)
 // ==========================================================================
-function setupStarterModal(starterCards) {
-  const grid = document.getElementById('starter-cards-grid');
-  if (!grid) return;
+let starterFlipTimers = [];
 
-  grid.innerHTML = starterCards.map(card => {
+function setupStarterModal(starterCards) {
+  const stagePack = document.getElementById('starter-stage-pack');
+  const stageReveal = document.getElementById('starter-stage-reveal');
+  const boosterPack = document.getElementById('starter-pack-booster');
+  const openBtn = document.getElementById('btn-starter-open');
+  const skipBtn = document.getElementById('btn-starter-skip');
+  const confirmBtn = document.getElementById('btn-starter-confirm');
+  const summaryEl = document.getElementById('starter-summary-stats');
+  const grid = document.getElementById('starter-cards-grid');
+
+  if (!grid || !stagePack || !stageReveal) return;
+
+  // Reseta estado para a fase do pacote fechado
+  stagePack.classList.remove('hidden');
+  stageReveal.classList.add('hidden');
+  confirmBtn?.classList.add('hidden');
+  boosterPack?.classList.remove('tearing');
+
+  // Limpa quaisquer timers pendentes de abertura anterior
+  starterFlipTimers.forEach(t => clearTimeout(t));
+  starterFlipTimers = [];
+
+  // Pílulas de resumo de raridade
+  const counts = { SS: 0, S: 0, A: 0, B: 0, C: 0 };
+  starterCards.forEach(c => {
+    const r = c.rank || 'C';
+    if (counts[r] !== undefined) counts[r]++;
+  });
+
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      ${counts.SS > 0 ? `<div class="starter-summary-pill" style="border-color: #ff0055; color: #ff0055;">👑 ${counts.SS} Lendário${counts.SS > 1 ? 's' : ''}</div>` : ''}
+      ${counts.S > 0 ? `<div class="starter-summary-pill" style="border-color: #a855f7; color: #c084fc;">🔥 ${counts.S} Épico${counts.S > 1 ? 's' : ''}</div>` : ''}
+      ${counts.A > 0 ? `<div class="starter-summary-pill" style="border-color: #3b82f6; color: #60a5fa;">💎 ${counts.A} Raro${counts.A > 1 ? 's' : ''}</div>` : ''}
+      ${counts.B > 0 ? `<div class="starter-summary-pill" style="border-color: #10b981; color: #34d399;">⚡ ${counts.B} Incomum${counts.B > 1 ? 'ns' : ''}</div>` : ''}
+      <div class="starter-summary-pill" style="border-color: #64748b; color: #94a3b8;">⚪ ${counts.C} Comum${counts.C > 1 ? 'ns' : ''}</div>
+    `;
+  }
+
+  // Monta as 20 cartas viradas de costas (is-back)
+  grid.innerHTML = starterCards.map((card, idx) => {
     const rank = card.rank || 'C';
+    const isHighRank = rank === 'SS' || rank === 'S';
     return `
-      <div class="pokedex-mini-card rank-${rank.toLowerCase()}">
-        <span class="card-rank-badge rank-${rank.toLowerCase()}" style="position: absolute; top: 4px; left: 4px; font-size: 0.5rem; padding: 1px 4px;">${rank}</span>
-        <img src="${card.image}" alt="${card.name}" class="pokedex-mini-art">
-        <div class="pokedex-mini-name" style="font-size: 0.75rem;">${card.name}</div>
-        <div class="pokedex-mini-stats" style="font-size: 0.65rem;">
-          <span>⚔️${card.attack}</span><span>🛡️${card.defense}</span><span>⚡${card.speed}</span>
+      <div class="starter-card-flip ${isHighRank ? 'starter-pull-highlight' : ''}" data-idx="${idx}">
+        <div class="starter-card-inner is-back" id="starter-card-${idx}">
+          <div class="starter-card-face back"></div>
+          <div class="starter-card-face front rank-${rank.toLowerCase()}">
+            <span class="card-rank-badge rank-${rank.toLowerCase()}" style="position: absolute; top: 4px; left: 4px; font-size: 0.5rem; padding: 1px 4px;">${rank}</span>
+            <img src="${card.image}" alt="${card.name}" class="pokedex-mini-art" style="margin-top: 2px;">
+            <div class="pokedex-mini-name" style="font-size: 0.75rem; margin-top: 2px;">${card.name}</div>
+            <div class="pokedex-mini-stats" style="font-size: 0.62rem;">
+              <span>⚔️${card.attack}</span><span>🛡️${card.defense}</span><span>⚡${card.speed}</span>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }).join('');
+
+  let opening = false;
+
+  const handleOpen = () => {
+    if (opening) return;
+    opening = true;
+
+    sound.playBoosterOpen();
+    boosterPack?.classList.add('tearing');
+
+    setTimeout(() => {
+      stagePack.classList.add('hidden');
+      stageReveal.classList.remove('hidden');
+
+      // Revelação em cascata das 20 cartas
+      starterCards.forEach((card, idx) => {
+        const timer = setTimeout(() => {
+          const cardInner = document.getElementById(`starter-card-${idx}`);
+          if (cardInner) {
+            cardInner.classList.remove('is-back');
+            const rank = card.rank || 'C';
+            if (rank === 'SS' || rank === 'S') {
+              sound.playRarityReveal(rank);
+            } else {
+              sound.playCardFlip();
+            }
+          }
+
+          // Se for a última carta revelada:
+          if (idx === starterCards.length - 1) {
+            confirmBtn?.classList.remove('hidden');
+            startConfetti();
+            setTimeout(() => stopConfetti(), 3500);
+          }
+        }, idx * 110);
+        starterFlipTimers.push(timer);
+      });
+    }, 700);
+  };
+
+  openBtn?.replaceWith(openBtn.cloneNode(true));
+  boosterPack?.replaceWith(boosterPack.cloneNode(true));
+  skipBtn?.replaceWith(skipBtn.cloneNode(true));
+
+  const freshOpenBtn = document.getElementById('btn-starter-open');
+  const freshBoosterPack = document.getElementById('starter-pack-booster');
+  const freshSkipBtn = document.getElementById('btn-starter-skip');
+
+  freshOpenBtn?.addEventListener('click', handleOpen);
+  freshBoosterPack?.addEventListener('click', handleOpen);
+
+  freshSkipBtn?.addEventListener('click', () => {
+    starterFlipTimers.forEach(t => clearTimeout(t));
+    starterFlipTimers = [];
+
+    stagePack.classList.add('hidden');
+    stageReveal.classList.remove('hidden');
+
+    for (let i = 0; i < starterCards.length; i++) {
+      const cardInner = document.getElementById(`starter-card-${i}`);
+      if (cardInner) cardInner.classList.remove('is-back');
+    }
+
+    confirmBtn?.classList.remove('hidden');
+    startConfetti();
+    setTimeout(() => stopConfetti(), 2500);
+    sound.playClick();
+  });
 }
 
 // ==========================================================================

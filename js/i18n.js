@@ -191,7 +191,13 @@ const DICT = {
     },
     starter: {
       title: '🎒 Boas-vindas ao PokéTrunfo!',
-      subtitle: 'Você recebeu seu Pacote Inicial de 20 cartas aleatórias para montar seu baralho!',
+      subtitle: 'Você recebeu seu Pacote Inicial de 20 cartas para começar sua jornada!',
+      packHeader: 'PACOTE INICIAL',
+      packBadge: '★ 20 CARTAS ★',
+      packFooter: 'EDIÇÃO 1ª GERAÇÃO',
+      openBtn: '✨ TOQUE PARA ABRIR O PACOTE! ✨',
+      revealTitle: '🎉 Suas 20 Cartas Iniciais!',
+      skipBtn: '⏩ Pular Animação',
       btn: 'MONTAR MEU BARALHO ⚡'
     },
     wager: {
@@ -419,7 +425,13 @@ const DICT = {
     },
     starter: {
       title: '🎒 Welcome to PokéTrunfo!',
-      subtitle: 'Here is your Starter Pack of 20 random cards to begin building your decks!',
+      subtitle: 'You received your Starter Pack of 20 cards to begin your journey!',
+      packHeader: 'STARTER PACK',
+      packBadge: '★ 20 CARDS ★',
+      packFooter: '1ST GEN EDITION',
+      openBtn: '✨ TAP TO OPEN PACK! ✨',
+      revealTitle: '🎉 Your 20 Starter Cards!',
+      skipBtn: '⏩ Skip Animation',
       btn: 'BUILD MY DECK ⚡'
     },
     wager: {

@@ -1660,15 +1660,251 @@ body {
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
 }
 
+/* ==========================================================================
+   Starter Pack Unboxing Experience
+   ========================================================================== */
+.starter-modal {
+  max-width: 860px;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.6rem 2rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.starter-stage-pack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+  width: 100%;
+}
+
+.starter-pack-booster {
+  width: 220px;
+  height: 320px;
+  background: linear-gradient(145deg, #1e293b 0%, #090d16 50%, #1e1b4b 100%);
+  border: 3px solid #fbbf24;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(251, 191, 36, 0.35);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  user-select: none;
+}
+
+.starter-pack-booster:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.8), 0 0 35px rgba(251, 191, 36, 0.6);
+}
+
+.starter-pack-header {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  color: #fbbf24;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+}
+
+.starter-pack-logo {
+  width: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
+  z-index: 2;
+}
+
+.starter-pack-badge {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.68rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 2px solid #fca5a5;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.6);
+  z-index: 2;
+}
+
+.starter-pack-footer {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.booster-foil-sheen {
+  position: absolute;
+  inset: -120% -60%;
+  background: linear-gradient(
+    60deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.18) 46%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.18) 54%,
+    transparent 65%
+  );
+  animation: foilSheenAnim 3.8s infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes foilSheenAnim {
+  0% { transform: translateY(-50%) rotate(25deg); }
+  100% { transform: translateY(50%) rotate(25deg); }
+}
+
+.starter-pack-booster.tearing {
+  animation: packTearAnim 0.75s cubic-bezier(0.36, 0, 0.66, -0.56) forwards !important;
+}
+
+@keyframes packTearAnim {
+  0% { transform: scale(1) rotate(0deg); }
+  15% { transform: scale(1.08) rotate(-5deg); filter: brightness(1.3); }
+  30% { transform: scale(1.15) rotate(5deg); filter: brightness(1.6); }
+  45% { transform: scale(1.22) rotate(-4deg); filter: brightness(2) contrast(1.4); }
+  65% { transform: scale(1.3) rotate(3deg); filter: brightness(2.8); opacity: 0.9; }
+  85% { transform: scale(1.4) rotate(0deg); filter: brightness(3.5); opacity: 0.5; }
+  100% { transform: scale(1.5); filter: brightness(4); opacity: 0; }
+}
+
+.starter-tear-btn {
+  animation: pulseButton 2s infinite ease-in-out;
+}
+
+@keyframes pulseButton {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4); }
+  50% { transform: scale(1.03); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.8); }
+}
+
+/* FASE 2: Revelação das 20 Cartas */
+.starter-stage-reveal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.starter-reveal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 0.8rem;
+}
+
+.starter-summary-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+
+.starter-summary-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--surface-border);
+}
+
 .starter-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
-  max-height: 380px;
+  max-height: 52vh;
   overflow-y: auto;
   padding: 12px;
   background: rgba(0, 0, 0, 0.35);
   border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  width: 100%;
+}
+
+.starter-card-flip {
+  perspective: 800px;
+  height: 130px;
+  position: relative;
+}
+
+.starter-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.starter-card-inner.is-back {
+  transform: rotateY(180deg);
+}
+
+.starter-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.starter-card-face.back {
+  background: #1a202c url('../verso.jpg') center/cover;
+  border: 2px solid #e8b923;
+  transform: rotateY(180deg);
+}
+
+.starter-card-face.front {
+  background: var(--ink-soft);
+  border: 2px solid var(--ink-panel-2);
+  padding: 6px;
+  color: #fff;
+  transform: rotateY(0deg);
+}
+
+.starter-card-face.front.rank-ss {
+  border-color: #ff0055 !important;
+  box-shadow: 0 0 14px rgba(255, 0, 85, 0.6);
+}
+
+.starter-card-face.front.rank-s {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
+}
+
+.starter-card-face.front.rank-a {
+  border-color: #3b82f6 !important;
+}
+
+.starter-pull-highlight {
+  animation: pullGlow 1.2s infinite alternate;
+}
+
+@keyframes pullGlow {
+  0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5)); }
+  100% { transform: scale(1.05); filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.9)); }
 }
 
 /* ==========================================================================

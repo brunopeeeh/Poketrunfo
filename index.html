@@ -547,19 +547,49 @@
   </div>
 
 
-  <!-- Modal do Starter Pack (Boas-vindas) -->
+  <!-- Modal do Starter Pack (Boas-vindas com Abertura Interativa de Booster) -->
   <div id="modal-starter" class="modal-overlay hidden">
     <div class="modal-card starter-modal">
-      <h2 class="modal-title" style="color: #ffd700;" data-i18n="starter.title">🎒 Boas-vindas ao PokéTrunfo!</h2>
-      <p style="color: #cbd5e1; margin-bottom: 1rem;" data-i18n="starter.subtitle">Você recebeu seu Pacote Inicial de 20 cartas aleatórias para montar seu baralho!</p>
+      
+      <!-- FASE 1: O Pacote de Booster Fechado para Rasgar -->
+      <div id="starter-stage-pack" class="starter-stage-pack">
+        <h2 class="modal-title" style="color: #ffd700;" data-i18n="starter.title">🎒 Boas-vindas ao PokéTrunfo!</h2>
+        <p style="color: #cbd5e1; margin-bottom: 1.5rem;" data-i18n="starter.subtitle">Você recebeu seu Pacote Inicial de 20 cartas para começar sua jornada!</p>
 
-      <div class="starter-cards-grid" id="starter-cards-grid">
-        <!-- Renderizado dinamicamente com as 20 cartas -->
+        <div class="starter-pack-booster" id="starter-pack-booster" role="button" tabindex="0" title="Toque para abrir!">
+          <div class="booster-foil-sheen"></div>
+          <div class="starter-pack-header" data-i18n="starter.packHeader">PACOTE INICIAL</div>
+          <img src="logo.png" alt="PokéTrunfo" class="starter-pack-logo">
+          <div class="starter-pack-badge" data-i18n="starter.packBadge">★ 20 CARTAS ★</div>
+          <div class="starter-pack-footer" data-i18n="starter.packFooter">EDIÇÃO 1ª GERAÇÃO</div>
+          <div class="starter-pack-glow"></div>
+        </div>
+
+        <button type="button" class="start-btn starter-tear-btn" id="btn-starter-open" style="margin-top: 1.5rem; max-width: 380px;" data-i18n="starter.openBtn">
+          ✨ TOQUE PARA ABRIR O PACOTE! ✨
+        </button>
       </div>
 
-      <button class="start-btn" id="btn-starter-confirm" style="width: 100%; margin-top: 1.5rem;" data-i18n="starter.btn">
-        MONTAR MEU BARALHO ⚡
-      </button>
+      <!-- FASE 2: Abertura e Revelação das 20 Cartas -->
+      <div id="starter-stage-reveal" class="starter-stage-reveal hidden">
+        <div class="starter-reveal-topbar">
+          <h2 class="modal-title" style="color: #ffd700; margin: 0;" data-i18n="starter.revealTitle">🎉 Suas 20 Cartas Iniciais!</h2>
+          <button type="button" class="header-btn header-btn-sm" id="btn-starter-skip" data-i18n="starter.skipBtn">⏩ Pular Animação</button>
+        </div>
+
+        <div id="starter-summary-stats" class="starter-summary-stats">
+          <!-- Preenchido dinamicamente com pílulas de raridade -->
+        </div>
+
+        <div class="starter-cards-grid" id="starter-cards-grid">
+          <!-- Renderizado dinamicamente com as 20 cartas em 3D flip -->
+        </div>
+
+        <button class="start-btn hidden" id="btn-starter-confirm" style="width: 100%; margin-top: 1.2rem;" data-i18n="starter.btn">
+          MONTAR MEU BARALHO ⚡
+        </button>
+      </div>
+
     </div>
   </div>
 
