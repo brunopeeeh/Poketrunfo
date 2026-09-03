@@ -834,7 +834,7 @@ body {
   background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(6px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
   padding: 1.2rem;
@@ -853,6 +853,7 @@ body {
   box-shadow: var(--bevel-shadow);
   position: relative;
   text-align: center;
+  margin: auto;
 }
 
 .modal-close-btn {
@@ -1488,13 +1489,6 @@ body {
   padding: 1px 5px;
 }
 
-.pokedex-mini-stats {
-  display: flex;
-  gap: 6px;
-  font-size: 0.68rem;
-  color: var(--bone-dim);
-}
-
 .pokedex-mini-actions {
   display: flex;
   gap: 4px;
@@ -1624,7 +1618,6 @@ body {
 
   .pokedex-grid {
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    max-height: 300px;
   }
 }
 
@@ -2592,15 +2585,16 @@ body {
   .col-card-item {
     padding: 8px 4px;
   }
-  .col-card-art {
-    width: 44px;
-    height: 44px;
+  .col-card-item .pokedex-mini-art {
+    width: 60px !important;
+    height: 60px !important;
   }
-  .col-card-name {
-    font-size: 0.75rem;
+  .col-card-item .pokedex-mini-name {
+    font-size: 0.75rem !important;
   }
   .wager-side {
     min-width: 0;
+    flex: 1 1 100%;
     width: 100%;
     padding: 0.8rem;
   }
@@ -2632,5 +2626,624 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ==========================================================================
+   Celular (≤ 600px) — cabeçalho compacto, menu enxuto, telas de fluxo
+   (deck builder / aposta / moeda) e arena em duas colunas.
+   Regras ficam no fim do arquivo de propósito: vencem as anteriores pela
+   ordem da cascata sem precisar de !important.
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* background-attachment: fixed é ignorado/caro no iOS e força repaint
+     de tela cheia a cada scroll no Android. */
+  body {
+    background-attachment: scroll;
+  }
+}
+
+@media (max-width: 600px) {
+  /* --- Cabeçalho: 2 linhas em vez de 3-4 --------------------------------
+     Linha 1: logo + preferências (ícones)  |  Linha 2: navegação do jogo.
+     display:contents solta os dois grupos direto no flex do header para
+     poder reordená-los sem mexer no HTML. */
+  .app-header {
+    padding: 0.45rem 0.6rem;
+    row-gap: 0.35rem;
+    column-gap: 0.5rem;
+  }
+
+  .app-logo {
+    height: 32px;
+  }
+
+  .logo-container {
+    gap: 8px;
+    order: 0;
+  }
+
+  .logo-container::before {
+    width: 8px;
+    height: 8px;
+  }
+
+  .header-controls {
+    display: contents;
+  }
+
+  .header-settings-group {
+    order: 1;
+    width: auto;
+    margin-left: auto;
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  .header-nav-group {
+    order: 2;
+    width: 100%;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .header-btn,
+  .header-btn-sm {
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    gap: 4px;
+    border-radius: 7px;
+    min-height: 34px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .header-btn > span:first-child {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  /* Preferências viram só ícone (todas têm aria-label/title). */
+  .header-settings-group .header-btn > span:not(:first-child) {
+    display: none;
+  }
+
+  .header-settings-group .header-btn {
+    width: 34px;
+    justify-content: center;
+    padding: 6px 0;
+  }
+
+  .booster-btn {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Coleção / Pokédex / Regras viram só ícone para o Booster (timer) caber
+     na mesma linha. aria-label continua descrevendo cada botão. */
+  .header-nav-group .header-btn:not(.booster-btn) > span:not(:first-child) {
+    display: none;
+  }
+
+  .header-nav-group .header-btn:not(.booster-btn) {
+    width: 38px;
+    justify-content: center;
+    padding: 6px 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    padding: 0.7rem 0.5rem 1rem;
+  }
+
+  /* --- Botões de fonte pixel: Press Start 2P dobra de largura em relação
+     à Manrope; em 1.05rem "MONTAR BARALHO ⚡" já quebrava em 2 linhas. --- */
+  .start-btn {
+    font-size: 0.78rem;
+    padding: 0.95rem 1rem;
+    line-height: 1.5;
+    border-radius: 10px;
+    box-shadow: 0 5px 0 var(--dex-red-deep), 0 10px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .action-btn-main {
+    font-size: 0.68rem;
+    padding: 11px 16px;
+    line-height: 1.5;
+  }
+
+  .menu-card,
+  .coin-card {
+    padding: 1.3rem 1rem 1.2rem;
+    border-radius: 12px;
+  }
+
+  .menu-hero-img {
+    max-width: 120px;
+    margin-bottom: 0.8rem;
+  }
+
+  .menu-title {
+    font-size: 1.35rem;
+    text-shadow: 2px 2px 0 var(--dex-red-deep), 4px 4px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .menu-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  /* --- Cartuchos de dificuldade: 3 cards altos empilhados ocupavam ~900px.
+     Vira uma linha compacta: título | badge / detalhe | HP. --- */
+  .difficulty-grid {
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .difficulty-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "title badge"
+      "detail hp";
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 1rem 0.9rem 0.7rem;
+    text-align: left;
+  }
+
+  .difficulty-card::before {
+    height: 6px;
+  }
+
+  .difficulty-card:hover {
+    transform: none;
+  }
+
+  .difficulty-card.selected {
+    transform: translateY(-2px);
+  }
+
+  .diff-title {
+    grid-area: title;
+    font-size: 1.1rem;
+  }
+
+  .diff-badge {
+    grid-area: badge;
+    margin: 0;
+    font-size: 0.68rem;
+    padding: 3px 8px;
+  }
+
+  .diff-detail {
+    grid-area: detail;
+    font-size: 0.82rem;
+  }
+
+  .diff-hp {
+    grid-area: hp;
+    margin: 0;
+    font-size: 0.62rem;
+    justify-self: end;
+  }
+
+  /* --- Deck builder: a bandeja de escolhidos reusa .pokedex-slots, que em
+     ≤480px vira coluna (regra do simulador VS). Aqui tem que ser wrap. --- */
+  #deckbuilder-tray {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  #deckbuilder-tray .deckbuilder-chip {
+    width: auto;
+  }
+
+  .deckbuilder-chip-art {
+    width: 22px;
+    height: 22px;
+  }
+
+  .deckbuilder-chip-name {
+    font-size: 0.72rem;
+  }
+
+  #screen-deckbuilder .pokedex-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  #screen-deckbuilder .pokedex-mini-card {
+    padding: 6px 4px;
+  }
+
+  #screen-deckbuilder .pokedex-mini-art {
+    width: 48px;
+    height: 48px;
+  }
+
+  .deckbuilder-actions .start-btn {
+    font-size: 0.68rem;
+    padding: 0.8rem 0.6rem;
+  }
+
+  /* --- Aposta (ante): lados empilhados, botões em coluna. --- */
+  .wager-matchup-container {
+    flex-direction: column;
+    gap: 10px;
+    margin: 1rem 0;
+  }
+
+  .wager-side {
+    padding: 0.9rem 0.7rem;
+  }
+
+  .wager-vs {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .wager-card-preview {
+    min-height: 0;
+  }
+
+  .wager-selection-tray {
+    max-height: 150px;
+  }
+
+  #screen-wager .menu-card > div:last-child {
+    flex-wrap: wrap;
+    margin-top: 1rem !important;
+  }
+
+  #btn-wager-confirm {
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  #btn-wager-back {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  /* --- Moeda: Cara / Coroa lado a lado, moeda menor. --- */
+  .coin-instructions {
+    font-size: 0.92rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .coin-options {
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .coin-choice-btn {
+    flex: 1 1 40%;
+    justify-content: center;
+    padding: 0.85rem 0.8rem;
+    font-size: 1.05rem;
+  }
+
+  .coin-result-banner {
+    font-size: 1.02rem;
+    padding: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  /* --- Arena (ver bloco ≤900px abaixo para o grid): fontes compactas. --- */
+  .arena-container {
+    gap: 10px 8px;
+  }
+
+  .arena-center {
+    padding: 0.9rem 0.7rem;
+    gap: 10px;
+    border-radius: 10px;
+  }
+
+  .combatant-panel {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .combatant-info {
+    padding: 8px 9px;
+    gap: 5px;
+    border-radius: 8px;
+  }
+
+  .combatant-top {
+    flex-wrap: wrap;
+    gap: 3px 6px;
+  }
+
+  .combatant-name {
+    font-size: 0.82rem;
+    gap: 4px;
+  }
+
+  .deck-counter-badge {
+    font-size: 0.5rem;
+    padding: 3px 5px;
+    white-space: nowrap;
+  }
+
+  .hp-bar-container {
+    height: 12px;
+  }
+
+  .hp-text {
+    font-size: 0.5rem;
+  }
+
+  .evolve-trigger-btn {
+    font-size: 0.72rem;
+    padding: 6px 8px;
+  }
+
+  .turn-pill {
+    font-size: 0.62rem;
+    padding: 7px 12px;
+  }
+
+  .dispute-pot-badge {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+  }
+
+  .round-action-text {
+    font-size: 0.92rem;
+    min-height: 0;
+    line-height: 1.35;
+  }
+
+  .type-matchup-pill {
+    gap: 8px;
+    padding: 5px 12px;
+  }
+
+  .type-badge-pill {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+
+  .type-matchup-symbol {
+    font-size: 1.1rem;
+  }
+
+  .type-matchup-label {
+    font-size: 0.68rem;
+  }
+
+  .floating-damage {
+    font-size: 1rem;
+  }
+
+  /* --- Modais --- */
+  .modal-overlay {
+    padding: 0.6rem;
+  }
+
+  .modal-card {
+    padding: 1.2rem 0.9rem;
+    border-radius: 12px;
+  }
+
+  .modal-close-btn {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+
+  .rules-content {
+    font-size: 0.9rem;
+    max-height: 68vh;
+    max-height: 68dvh;
+  }
+
+  .pokedex-modal {
+    max-height: calc(100vh - 1.2rem);
+    max-height: calc(100dvh - 1.2rem);
+  }
+
+  .pokedex-modal-header {
+    padding: 0.7rem 0.8rem;
+    gap: 8px;
+  }
+
+  .pokedex-modal-header .modal-title {
+    font-size: 1.1rem;
+  }
+
+  #pokedex-progress {
+    display: none;
+  }
+
+  .pokedex-tabs-nav {
+    padding: 6px 0.6rem;
+    gap: 4px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .pokedex-tab-btn {
+    font-size: 0.74rem;
+    padding: 5px 9px;
+  }
+
+  .pokedex-modal-body {
+    padding: 0.8rem 0.7rem;
+  }
+
+  .pokedex-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .pokedex-mini-card {
+    padding: 6px 4px;
+  }
+
+  .pokedex-mini-art {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* Cards de ~100px: 3 stats por linha estouram com valores de 3 dígitos
+     (❤️250 do Chansey). 2 por linha cabe folgado. */
+  .pokedex-mini-stats {
+    grid-template-columns: repeat(2, 1fr);
+    font-size: 0.6rem;
+    gap: 2px 0;
+  }
+
+  /* Booster: 5 cartas em 3 + 2 em vez de 2 + 2 + 1 gigantes. */
+  .booster-cards-grid {
+    gap: 8px;
+    margin: 1rem 0;
+  }
+
+  .booster-card-wrapper {
+    width: 100px;
+    height: 150px;
+  }
+
+  .booster-mini-art {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Starter pack: modal rolável (o botão "toque para abrir" e o de confirmar
+     ficavam cortados pelo overflow:hidden + max-height 88vh). */
+  .starter-modal {
+    max-height: none;
+    overflow: visible;
+    padding: 1.2rem 0.9rem;
+  }
+
+  .starter-pack-booster {
+    width: 180px;
+    height: 260px;
+    padding: 14px 10px;
+  }
+
+  .starter-pack-logo {
+    width: 120px;
+  }
+
+  .starter-tear-btn {
+    font-size: 0.7rem;
+  }
+
+  .starter-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+    padding: 8px;
+  }
+
+  .starter-card-flip {
+    height: 138px;
+  }
+
+  #btn-starter-confirm {
+    position: sticky;
+    bottom: 0.4rem;
+    z-index: 2;
+  }
+
+  /* Coleção */
+  .collection-grid-container {
+    max-height: 62vh;
+    max-height: 62dvh;
+  }
+
+  .collection-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Arena em tablet e celular: as duas cartas lado a lado (P1 | CPU) e o
+   painel de scanner com turno / resultado / próxima rodada abaixo. No
+   celular tudo cabe numa tela de ~650px em vez de ~1400px de rolagem. */
+@media (max-width: 900px) {
+  .arena-container {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "p1 cpu"
+      "center center";
+    align-items: start;
+    justify-items: center;
+  }
+
+  .combatant-panel:first-child {
+    grid-area: p1;
+  }
+
+  .combatant-panel:last-child {
+    grid-area: cpu;
+  }
+
+  .arena-center {
+    grid-area: center;
+    width: 100%;
+    max-width: 640px;
+    min-width: 0;
+  }
+
+  /* "Cartas: 10" em Press Start 2P quebrava em 2 linhas dentro do painel
+     de 240px; nowrap + wrap do container manda o badge inteiro pra linha
+     de baixo quando não cabe ao lado do nome. */
+  .combatant-top {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .deck-counter-badge {
+    white-space: nowrap;
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .pokedex-grid,
+  #screen-deckbuilder .pokedex-grid,
+  .starter-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Touch: :hover "gruda" depois do toque no celular, deixando cartas e
+   botões deslocados/escalados até o próximo toque. */
+@media (hover: none) {
+  .header-btn:hover,
+  .difficulty-card:hover,
+  .start-btn:hover,
+  .action-btn-main:hover,
+  .coin-choice-btn:hover,
+  .col-card-item:hover,
+  .wager-chip:hover,
+  .btn-collection-fuse:hover,
+  .starter-pack-booster:hover {
+    transform: none;
+  }
+
+  .difficulty-card.selected {
+    transform: translateY(-2px);
+  }
+
+  .col-card-item.selected {
+    transform: translateY(-2px);
   }
 }

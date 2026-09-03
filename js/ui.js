@@ -177,7 +177,7 @@ export function initUI() {
 function updateMuteButtonLabel() {
   const muteBtn = document.getElementById('btn-mute');
   if (!muteBtn) return;
-  muteBtn.innerHTML = `<span>${sound.isMuted ? '🔇' : '🔊'}</span> ${sound.isMuted ? t('header.soundOff') : t('header.soundOn')}`;
+  muteBtn.innerHTML = `<span>${sound.isMuted ? '🔇' : '🔊'}</span> <span>${sound.isMuted ? t('header.soundOff') : t('header.soundOn')}</span>`;
 }
 
 function updateLangButtonLabel() {
