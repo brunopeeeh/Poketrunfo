@@ -88,6 +88,21 @@ function observeHeaderHeight() {
   new ResizeObserver(update).observe(header);
 }
 
+// Em telas estreitas a barra "Voltar/Confirmar" do deck builder vira uma
+// barra fixa no rodapé (o texto do botão pode quebrar em 2 linhas ali,
+// mudando a altura real). Mede ao vivo em vez de chutar um px fixo, pro
+// menu-card sempre reservar espaço suficiente e nunca deixar cartas da
+// grade escondidas atrás da barra.
+function observeDeckbuilderActionsHeight() {
+  const bar = document.querySelector('.deckbuilder-actions');
+  if (!bar) return;
+  const update = () => {
+    document.documentElement.style.setProperty('--deckbuilder-actions-height', `${bar.offsetHeight}px`);
+  };
+  update();
+  new ResizeObserver(update).observe(bar);
+}
+
 function setupHeaderScrollBehavior() {
   const header = document.querySelector('.app-header');
   if (!header) return;
@@ -135,6 +150,7 @@ export function initUI() {
   setupConfetti();
   startBoosterTimer();
   observeHeaderHeight();
+  observeDeckbuilderActionsHeight();
   setupHeaderScrollBehavior();
 
   // Verifica inventário do jogador; se estiver vazio/novo, entrega o Starter Pack de 20 cartas!

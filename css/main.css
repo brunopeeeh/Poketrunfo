@@ -1288,7 +1288,10 @@ body {
    nada da grade ficar escondido atrás dela. */
 @media (max-width: 768px) {
   #screen-deckbuilder .menu-card {
-    padding-bottom: 96px;
+    /* O botão de confirmar pode quebrar em 2 linhas nessa largura, mudando a
+       altura real da barra fixa — --deckbuilder-actions-height é medida ao
+       vivo (ui.js) em vez de chutada, senão a reserva de espaço fica curta. */
+    padding-bottom: calc(var(--deckbuilder-actions-height, 100px) + 16px);
   }
 
   .deckbuilder-actions {
