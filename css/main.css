@@ -61,6 +61,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 0.6rem;
   padding: 0.8rem 1.8rem;
   background: var(--ink);
   border-bottom: 3px solid var(--ink-panel);
@@ -68,6 +70,14 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  will-change: transform;
+}
+
+.app-header.header-hidden {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .logo-container {
@@ -116,6 +126,8 @@ body {
 .header-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 12px;
 }
 
@@ -123,6 +135,8 @@ body {
 .header-settings-group {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -131,6 +145,14 @@ body {
   height: 24px;
   background: rgba(255, 255, 255, 0.15);
   margin: 0 4px;
+}
+
+/* Abaixo da largura em que cabeçalho quebra em múltiplas linhas, o divisor
+   vertical entre os grupos não faz sentido — cada grupo já forma sua própria linha. */
+@media (max-width: 900px) {
+  .header-divider {
+    display: none;
+  }
 }
 
 .header-btn {
@@ -424,8 +446,9 @@ body {
 
 .coin-options {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1rem 1.5rem;
   margin-bottom: 2rem;
 }
 
@@ -1400,7 +1423,8 @@ body {
 
   .menu-card,
   .coin-card,
-  .modal-card {
+  .modal-card,
+  .collection-page-card {
     padding: 1.4rem 1.1rem;
   }
 
@@ -1966,7 +1990,10 @@ body {
   flex-direction: column;
   align-items: center;
   position: sticky;
-  top: 10px;
+  /* Header também é sticky e quebra em 1-3 linhas dependendo da largura da
+     tela — --header-height é medida ao vivo via ResizeObserver (ui.js) pra
+     este painel nunca ficar encoberto por baixo dele. */
+  top: calc(var(--header-height, 84px) + 10px);
 }
 
 .col-inspect-preview {

@@ -68,6 +68,52 @@ let confettiAnimId = null;
 // Timer de Booster
 let boosterTimerInterval = null;
 
+// Header é sticky e quebra em 1-3 linhas conforme a largura da tela. Mede a
+// altura real e publica em --header-height, pra elementos como o inspetor de
+// carta da Coleção (também sticky) saberem por onde começar sem ficar cobertos.
+function observeHeaderHeight() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+  const update = () => {
+    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  };
+  update();
+  new ResizeObserver(update).observe(header);
+}
+
+function setupHeaderScrollBehavior() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+
+        // Se estiver no topo (<= 25px), sempre mostra o cabeçalho
+        if (currentScrollY <= 25) {
+          header.classList.remove('header-hidden');
+        } 
+        // Se rolou para baixo e passou de 60px, esconde o cabeçalho
+        else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+          header.classList.add('header-hidden');
+        } 
+        // Se rolou para cima (voltando em direção ao topo), reexibe
+        else if (currentScrollY < lastScrollY) {
+          header.classList.remove('header-hidden');
+        }
+
+        lastScrollY = currentScrollY;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
 export function initUI() {
   applyStaticI18n();
   updateMuteButtonLabel();
@@ -75,6 +121,8 @@ export function initUI() {
   setupEventListeners();
   setupConfetti();
   startBoosterTimer();
+  observeHeaderHeight();
+  setupHeaderScrollBehavior();
 
   // Verifica inventário do jogador; se estiver vazio/novo, entrega o Starter Pack de 20 cartas!
   const existingInventory = loadInventory();
@@ -1896,7 +1944,7 @@ function renderCollectionGridAndInspector() {
              style="width: 86px; height: 86px; object-fit: contain; ${card.isOwned ? '' : 'filter: grayscale(1) brightness(0.35);'}">
         <div class="pokedex-mini-id" style="font-size: 0.68rem;">#${String(card.id).padStart(3, '0')}</div>
         <div class="pokedex-mini-name" style="font-size: 0.8rem;">${card.isOwned ? card.name : '???'}</div>
-        <div class="pokedex-mini-stats" style="font-size: 0.7rem; gap: 6px; white-space: nowrap;">
+        <div class="pokedex-mini-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 8px; font-size: 0.7rem; width: 100%;">
           <span title="HP">❤️${card.hp}</span><span title="${t('stat.attack')}">⚔️${card.attack}</span><span title="${t('stat.defense')}">🛡️${card.defense}</span><span title="${t('stat.speed')}">⚡${card.speed}</span>
         </div>
       </div>
