@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokéTrunfo - Super Trunfo Pokémon (1ª Geração)</title>
+  <meta name="description" content="Jogo de cartas no estilo Super Trunfo com os 151 Pokémon da 1ª Geração, dados oficiais da PokéAPI, 3 níveis de dificuldade, arremesso de moeda e evolução por fusão!">
+  <meta name="keywords" content="Pokemon, Super Trunfo, PokeAPI, Jogo de Cartas, 1a Geracao">
+  <meta name="theme-color" content="#0f172a">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/coin.css">
+
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+<body>
+
+  <!-- Canvas de Efeito de Vitória (Confetti) -->
+  <canvas id="confetti-canvas" style="position: fixed; inset: 0; pointer-events: none; z-index: 999;"></canvas>
+
+  <!-- Cabeçalho Principal -->
+  <header class="app-header">
+    <div class="logo-container" id="header-logo-home">
+      <img src="logo.png" alt="PokéTrunfo Logo" class="app-logo">
+      <span class="game-title">POKÉTRUNFO</span>
+    </div>
+    <div class="header-controls">
+      <!-- Navegação Principal do Jogo -->
+      <nav class="header-nav-group">
+        <button class="header-btn" id="btn-inventory" data-i18n-aria="header.ariaInventory" aria-label="Minha Coleção">
+          <span>🎒</span> <span data-i18n="header.inventory">Coleção</span>
+        </button>
+        <button class="header-btn" id="btn-pokedex" data-i18n-aria="header.ariaPokedex" aria-label="Pokédex de Consulta">
+          <span>🔍</span> <span data-i18n="header.pokedex">Pokédex</span>
+        </button>
+        <button class="header-btn" id="btn-rules" data-i18n-aria="header.ariaRules" aria-label="Regras do Jogo">
+          <span>📜</span> <span data-i18n="header.rules">Regras</span>
+        </button>
+        <button class="header-btn booster-btn" id="btn-booster-claim" data-i18n-aria="header.ariaBooster" aria-label="Abrir Booster">
+          <span class="booster-pulse-icon">🎁</span> <span id="booster-timer-text">Booster</span>
+        </button>
+      </nav>
+
+      <!-- Divisor sutil -->
+      <div class="header-divider"></div>
+
+      <!-- Configurações e Preferências Utilitárias -->
+      <div class="header-settings-group">
+        <button class="header-btn header-btn-sm" id="btn-fast" data-i18n-aria="header.ariaFast" aria-label="Acelerar animações" aria-pressed="false" title="Modo Rápido">
+          <span>⚡</span> <span data-i18n="header.fast">Rápido</span>
+        </button>
+        <button class="header-btn header-btn-sm" id="btn-mute" data-i18n-aria="header.ariaSound" aria-label="Alternar Som" title="Áudio">
+          <span>🔊</span> <span data-i18n="header.soundOn">Som</span>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="40" data-i18n-aria="header.ariaVolume" aria-label="Volume do som" title="Volume">
+        <button class="header-btn header-btn-sm" id="btn-lang" data-i18n-aria="header.ariaLang" aria-label="Alternar Idioma" title="Idioma">
+          <span>🌐</span> <span id="btn-lang-label">PT/EN</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+
+    <!-- =======================================================================
+         TELA 1: MENU E SELEÇÃO DE DIFICULDADE
+         ======================================================================= -->
+    <section id="screen-menu" class="game-screen">
+      <div class="menu-card">
+        <img src="poke_trunfo_logo-removebg-preview.png" alt="Pokémon Batalha" class="menu-hero-img" onerror="this.src='logo.png'">
+        <h1 class="menu-title">SUPER TRUNFO POKÉMON</h1>
+        <p class="menu-subtitle" data-i18n="menu.subtitle">Colecione, dispute atributos da 1ª Geração e evolua seus Pokémon!</p>
+
+        <div class="difficulty-grid">
+          <!-- Fácil -->
+          <div class="difficulty-card easy selected" data-diff="easy" id="diff-easy">
+            <span class="diff-badge easy" data-i18n="menu.badgeEasy">Iniciante</span>
+            <h3 class="diff-title" data-i18n="menu.titleEasy">Fácil</h3>
+            <p class="diff-detail" data-i18n="menu.detailEasy">10 Cartas no Baralho</p>
+            <span class="diff-hp">❤️ 1000 HP</span>
+          </div>
+
+          <!-- Médio -->
+          <div class="difficulty-card medium" data-diff="medium" id="diff-medium">
+            <span class="diff-badge medium" data-i18n="menu.badgeMedium">Treinador</span>
+            <h3 class="diff-title" data-i18n="menu.titleMedium">Médio</h3>
+            <p class="diff-detail" data-i18n="menu.detailMedium">5 Cartas no Baralho</p>
+            <span class="diff-hp">❤️ 500 HP</span>
+          </div>
+
+          <!-- Difícil -->
+          <div class="difficulty-card hard" data-diff="hard" id="diff-hard">
+            <span class="diff-badge hard" data-i18n="menu.badgeHard">Mestre</span>
+            <h3 class="diff-title" data-i18n="menu.titleHard">Difícil</h3>
+            <p class="diff-detail" data-i18n="menu.detailHard">3 Cartas no Baralho</p>
+            <span class="diff-hp">❤️ 300 HP</span>
+          </div>
+        </div>
+
+        <button class="start-btn" id="btn-start-game" data-i18n="menu.startBtn" style="width: 100%; margin-top: 1.2rem;">
+          MONTAR BARALHO ⚡
+        </button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TELA 1.2: ÁLBUM DE COLEÇÃO (PÁGINA DEDICADA)
+         ======================================================================= -->
+    <section id="screen-collection" class="game-screen hidden">
+      <div class="collection-page-card">
+        <!-- Topo da Coleção -->
+        <div class="collection-topbar">
+          <button class="header-btn" id="btn-collection-back" data-i18n="collection.backBtn">← Voltar ao Menu</button>
+          <div class="collection-title-wrap">
+            <h2 class="collection-title" data-i18n="collection.title">🎒 ÁLBUM DE COLEÇÃO</h2>
+            <p class="collection-subtitle" data-i18n="collection.subtitle">Gerencie suas cartas, acompanhe seu progresso na Pokédex e funda cópias para evoluir!</p>
+          </div>
+          <button class="header-btn booster-btn" id="btn-collection-booster-claim">
+            <span class="booster-pulse-icon">🎁</span> <span id="collection-booster-timer-text">Booster</span>
+          </button>
+        </div>
+
+        <!-- Dashboard Geral de Estatísticas -->
+        <div class="collection-dashboard">
+          <div class="collection-stat-banner">
+            <div class="collection-progress-info">
+              <span class="collection-progress-label" data-i18n="collection.dexProgress">Progresso da Pokédex (Gen 1):</span>
+              <span class="collection-progress-val" id="col-dex-count">0 / 151 (0%)</span>
+            </div>
+            <div class="collection-progress-track">
+              <div class="collection-progress-fill" id="col-dex-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="collection-ranks-summary" id="col-ranks-summary">
+            <div class="col-rank-pill pill-ss">★ SS Lendário: <strong id="col-count-ss">0</strong></div>
+            <div class="col-rank-pill pill-s">S Épico: <strong id="col-count-s">0</strong></div>
+            <div class="col-rank-pill pill-a">A Raro: <strong id="col-count-a">0</strong></div>
+            <div class="col-rank-pill pill-b">B Incomum: <strong id="col-count-b">0</strong></div>
+            <div class="col-rank-pill pill-c">C Comum: <strong id="col-count-c">0</strong></div>
+            <div class="col-rank-pill pill-total">Total no Inventário: <strong id="col-count-total">0</strong></div>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros, Busca e Ordenação -->
+        <div class="collection-toolbar">
+          <!-- Alternador de Modo -->
+          <div class="collection-mode-selector">
+            <button type="button" class="mode-btn active" id="btn-col-mode-owned" data-i18n="collection.modeOwned">Minhas Cartas</button>
+            <button type="button" class="mode-btn" id="btn-col-mode-album" data-i18n="collection.modeAlbum">Álbum Completo (151)</button>
+          </div>
+
+          <!-- Busca por Texto -->
+          <div class="collection-search-wrap">
+            <input type="text" id="collection-search-input" class="pokedex-browse-search" placeholder="🔍 Buscar Pokémon por nome ou número..." data-i18n-placeholder="collection.searchPlaceholder">
+          </div>
+
+          <!-- Filtro por Rank -->
+          <div class="collection-rank-filter" id="collection-rank-filter">
+            <button type="button" class="header-btn filter-btn selected" data-rank="all">Todos</button>
+            <button type="button" class="header-btn filter-btn" data-rank="SS" style="color: #f59e0b;">★ SS</button>
+            <button type="button" class="header-btn filter-btn" data-rank="S" style="color: #a855f7;">S</button>
+            <button type="button" class="header-btn filter-btn" data-rank="A" style="color: #3b82f6;">A</button>
+            <button type="button" class="header-btn filter-btn" data-rank="B" style="color: #10b981;">B</button>
+            <button type="button" class="header-btn filter-btn" data-rank="C" style="color: #94a3b8;">C</button>
+          </div>
+
+          <!-- Filtros de Tipo e Ordenação -->
+          <div class="collection-selects-wrap">
+            <select id="collection-type-filter" class="collection-select" aria-label="Filtrar por Tipo">
+              <option value="all">Todos os Tipos</option>
+            </select>
+
+            <select id="collection-sort" class="collection-select" aria-label="Ordenar Cartas">
+              <option value="id">Nº Pokédex</option>
+              <option value="rank">Raridade (Rank)</option>
+              <option value="attack">Maior Ataque</option>
+              <option value="defense">Maior Defesa</option>
+              <option value="speed">Maior Velocidade</option>
+              <option value="copies">Mais Cópias</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Estrutura Principal: Grade (Esquerda) + Inspetor de Carta (Direita) -->
+        <div class="collection-main-layout">
+          <!-- Grade de Cartas -->
+          <div class="collection-grid-container">
+            <div class="collection-cards-grid" id="collection-cards-grid">
+              <!-- Renderizado dinamicamente -->
+            </div>
+          </div>
+
+          <!-- Inspetor de Detalhes da Carta -->
+          <div class="collection-inspector-container" id="collection-inspector-container">
+            <!-- Renderizado dinamicamente ao selecionar uma carta -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TELA 1.5: MONTAGEM DE BARALHO (DECK BUILDER)
+         ======================================================================= -->
+    <section id="screen-deckbuilder" class="game-screen hidden">
+      <div class="menu-card">
+        <h2 class="menu-title" style="font-size: 1.8rem;" data-i18n="deckbuilder.title">MONTE SEU BARALHO</h2>
+        <p class="menu-subtitle" id="deckbuilder-subtitle" style="margin-bottom: 1rem;"></p>
+        <p class="pokedex-subtitle" id="deckbuilder-progress" style="margin-bottom: 1rem;"></p>
+
+        <div class="pokedex-slots" id="deckbuilder-tray" style="flex-wrap: wrap;"></div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 1rem; flex-wrap: wrap; justify-content: center;">
+          <button class="header-btn" id="btn-deckbuilder-random" data-i18n="deckbuilder.randomFill">🎲 Preencher Aleatoriamente</button>
+          <button class="header-btn" id="btn-deckbuilder-clear" data-i18n="deckbuilder.clear">🗑️ Limpar Baralho</button>
+        </div>
+
+        <input type="text" id="deckbuilder-search" class="pokedex-browse-search" data-i18n-placeholder="deckbuilder.searchPlaceholder" placeholder="🔍 Buscar Pokémon por nome...">
+        <div class="pokedex-grid" id="deckbuilder-grid"></div>
+
+        <div style="display:flex; gap:10px; margin-top: 1rem;">
+          <button class="header-btn" id="btn-deckbuilder-back" data-i18n="deckbuilder.back">← Voltar</button>
+          <button class="start-btn" id="btn-deckbuilder-confirm" style="flex:1;" disabled data-i18n="deckbuilder.confirm">CONFIRMAR BARALHO ⚔️</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TELA 1.8: APOSTA PRÉ-BATALHA (WAGER / ANTE)
+         ======================================================================= -->
+    <section id="screen-wager" class="game-screen hidden">
+      <div class="menu-card wager-card">
+        <h2 class="menu-title" style="font-size: 1.8rem;" data-i18n="wager.title">⚔️ APOSTA DA PARTIDA (ANTE)</h2>
+        <p class="menu-subtitle" data-i18n="wager.subtitle" style="margin-bottom: 1.2rem;">Escolha 1 carta do seu baralho para arriscar! O vencedor leva as duas cartas para sua coleção!</p>
+
+        <div class="wager-matchup-container">
+          <div class="wager-side">
+            <span class="wager-side-label" data-i18n="wager.yourCard">Sua Carta Apostada:</span>
+            <div class="wager-card-preview" id="wager-player-preview"></div>
+            <p class="wager-hint">Clique abaixo para escolher qual carta arriscar:</p>
+            <div class="wager-selection-tray" id="wager-selection-tray"></div>
+          </div>
+
+          <div class="wager-vs">VS</div>
+
+          <div class="wager-side">
+            <span class="wager-side-label" data-i18n="wager.cpuCard">Carta Apostada pela CPU:</span>
+            <div class="wager-card-preview" id="wager-cpu-preview"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top: 1.5rem;">
+          <button class="header-btn" id="btn-wager-back" data-i18n="deckbuilder.back">← Voltar</button>
+          <button class="start-btn" id="btn-wager-confirm" style="flex:1;" data-i18n="wager.confirmBtn">CONFIRMAR APOSTA E JOGAR ⚔️</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TELA 2: CARA OU COROA (COIN TOSS)
+         ======================================================================= -->
+    <section id="screen-coin" class="game-screen hidden">
+      <div class="coin-card">
+        <h2 class="menu-title" style="font-size: 1.8rem;" data-i18n="coin.title">SORTEIO DA MOEDA</h2>
+        <p class="coin-instructions" data-i18n="coin.instructions">Escolha Cara ou Coroa para definir quem faz a primeira jogada!</p>
+
+        <!-- Palco 3D da Moeda -->
+        <div class="coin-stage">
+          <div class="coin" id="coin-3d">
+            <div class="coin-side cara">
+              <span class="coin-icon">👑</span>
+              <span class="coin-label" data-i18n="coin.cara">CARA</span>
+            </div>
+            <div class="coin-side coroa">
+              <span class="coin-icon">🪙</span>
+              <span class="coin-label" data-i18n="coin.coroa">COROA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Escolha -->
+        <div class="coin-options" id="coin-choice-buttons">
+          <button class="coin-choice-btn" data-choice="cara">
+            👑 <span data-i18n="coin.cara">CARA</span>
+          </button>
+          <button class="coin-choice-btn" data-choice="coroa">
+            🪙 <span data-i18n="coin.coroa">COROA</span>
+          </button>
+        </div>
+
+        <!-- Banner de Resultado -->
+        <div id="coin-result-banner" class="coin-result-banner hidden"></div>
+
+        <!-- Botão para Ir à Batalha -->
+        <div style="margin-top: 1.5rem;">
+          <button class="action-btn-main hidden" id="btn-to-battle" data-i18n="coin.toBattle">
+            ENTRAR NA ARENA ⚔️
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TELA 3: ARENA DE COMBATE
+         ======================================================================= -->
+    <section id="screen-battle" class="game-screen hidden">
+      <div class="arena-container">
+
+        <!-- PAINEL DO JOGADOR 1 -->
+        <div class="combatant-panel">
+          <div class="combatant-info">
+            <div class="combatant-top">
+              <span class="combatant-name" data-i18n="battle.you">🧑 Você (P1)</span>
+              <span class="deck-counter-badge" id="player-deck-count">Cartas: 10</span>
+            </div>
+            <div class="hp-bar-container">
+              <div class="hp-bar-fill" id="player-hp-fill"></div>
+            </div>
+            <div class="hp-text">
+              <span>HP</span>
+              <span id="player-hp-text">1000 / 1000 HP</span>
+            </div>
+            <!-- Botão de Notificação de Evolução -->
+            <button class="evolve-trigger-btn hidden" id="btn-evolve-trigger" data-i18n="battle.evolveAvailable">
+              ✨ Evolução Disponível!
+            </button>
+          </div>
+
+          <!-- Slot da Carta do Jogador -->
+          <div class="card-slot" id="player-card-slot">
+            <!-- Renderizado via JavaScript -->
+          </div>
+        </div>
+
+        <!-- CENTRO DA ARENA (CONTROLES E AÇÕES) -->
+        <div class="arena-center">
+          <div id="arena-turn-badge" class="turn-pill player-turn" data-i18n="battle.yourTurn">
+            SEU TURNO
+          </div>
+
+          <!-- Pílula de Vantagem / Desvantagem Elemental -->
+          <div id="arena-matchup-container" class="type-matchup-container hidden">
+            <!-- Renderizado dinamicamente via ui.js -->
+          </div>
+
+          <div id="arena-pot-badge" class="dispute-pot-badge hidden">
+            ⚡ Pote de Disputa: 0
+          </div>
+
+          <div class="round-action-text" id="arena-action-text" aria-live="polite" aria-atomic="true" data-i18n="battle.chooseAttribute">
+            Escolha um atributo da sua carta!
+          </div>
+
+          <button class="action-btn-main hidden" id="btn-next-round" data-i18n="battle.nextRound">
+            PRÓXIMA RODADA ➔
+          </button>
+
+          <!-- Abre a Pokédex já carregada com o confronto atual (carta do
+               jogador vs carta da CPU no topo dos baralhos) -->
+          <button class="pokedex-analyze-btn" id="btn-analyze-matchup" data-i18n="battle.analyzeMatchup" aria-label="Analisar este confronto na Pokédex">
+            🔍 Analisar Confronto
+          </button>
+        </div>
+
+        <!-- PAINEL DO COMPUTADOR (CPU) -->
+        <div class="combatant-panel">
+          <div class="combatant-info">
+            <div class="combatant-top">
+              <span class="combatant-name" data-i18n="battle.cpu">🤖 Computador</span>
+              <span class="deck-counter-badge" id="cpu-deck-count">Cartas: 10</span>
+            </div>
+            <div class="hp-bar-container">
+              <div class="hp-bar-fill" id="cpu-hp-fill"></div>
+            </div>
+            <div class="hp-text">
+              <span>HP</span>
+              <span id="cpu-hp-text">1000 / 1000 HP</span>
+            </div>
+          </div>
+
+          <!-- Slot da Carta da CPU -->
+          <div class="card-slot" id="cpu-card-slot">
+            <!-- Renderizado via JavaScript -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =======================================================================
+       MODAIS
+       ======================================================================= -->
+
+  <!-- Modal de Regras -->
+  <div id="modal-rules" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close-btn btn-close-modal">✕</button>
+      <h2 class="modal-title" data-i18n="rules.title">📜 Regras do PokéTrunfo</h2>
+      <div class="rules-content">
+        <h4 data-i18n="rules.objTitle">🎯 Objetivo do Jogo</h4>
+        <p data-i18n="rules.objText">Derrote seu oponente zerando todos os seus pontos de vida (HP) ou capturando todas as cartas do baralho dele!</p>
+
+        <h4 data-i18n="rules.diffTitle">⚙️ Níveis de Dificuldade</h4>
+        <ul>
+          <li data-i18n-html="rules.diffEasy"><strong>Fácil:</strong> 10 cartas e 1000 de HP.</li>
+          <li data-i18n-html="rules.diffMedium"><strong>Médio:</strong> 5 cartas e 500 de HP.</li>
+          <li data-i18n-html="rules.diffHard"><strong>Difícil:</strong> 3 cartas e 300 de HP.</li>
+        </ul>
+
+        <h4 data-i18n="rules.coinTitle">🪙 Cara ou Coroa</h4>
+        <p data-i18n="rules.coinText">No início, você escolhe Cara ou Coroa. Quem acertar o resultado da moeda começa fazendo a primeira jogada.</p>
+
+        <h4 data-i18n="rules.battleTitle">⚔️ Batalhas de Atributos</h4>
+        <p data-i18n-html="rules.battleText">Quem tem a vez escolhe um dos 6 atributos da carta no topo do seu baralho: <strong>HP</strong>, <strong>Ataque</strong>, <strong>Defesa</strong>, <strong>Atq. Especial</strong>, <strong>Def. Especial</strong> ou <strong>Velocidade</strong>.</p>
+        <ul>
+          <li data-i18n="rules.battleLi1">O jogador com maior valor vence a rodada.</li>
+          <li data-i18n-html="rules.battleLi2">O vencedor <strong>ganha a carta disputada</strong> do oponente.</li>
+          <li data-i18n-html="rules.battleLi3">O perdedor recebe <strong>dano de HP</strong> igual à diferença dos atributos.</li>
+          <li data-i18n-html="rules.battleLi4">Em caso de <strong>empate</strong>, as cartas vão para o Pote de Disputa e o vencedor da próxima rodada leva todas!</li>
+        </ul>
+
+        <h4 data-i18n="rules.typeTitle">🔥 Sistema de Vantagens e Desvantagens (Dual-Type)</h4>
+        <p data-i18n="rules.typeText">A eficácia elemental oficial de Pokémon influencia diretamente o combate:</p>
+        <ul>
+          <li data-i18n-html="rules.typeLi1"><strong>✨ Vantagem Elemental:</strong> Quem ataca com vantagem ganha <strong>+20% de bônus</strong> no atributo escolhido!</li>
+          <li data-i18n-html="rules.typeLi2"><strong>⚠️ Desvantagem Elemental:</strong> Quem ataca um oponente com vantagem sofre <strong>-20% de penalidade</strong> no atributo!</li>
+          <li data-i18n-html="rules.typeLi3"><strong>⚡ Dual-Type:</strong> Pokémon com 2 tipos utilizam o melhor tipo ofensivo e defensivo no cálculo da vantagem.</li>
+        </ul>
+
+        <h4 data-i18n="rules.evoTitle">✨ Mecânica de Evolução (Fusão x3)</h4>
+        <p data-i18n-html="rules.evoText">Se você acumular <strong>3 cartas do mesmo Pokémon</strong> no seu baralho, você poderá fundi-las em uma versão <strong>Super Evoluída</strong> com <strong>+1 em todos os 6 atributos</strong> (HP, Ataque, Defesa, Atq. Especial, Def. Especial e Velocidade) e moldura brilhante holográfica!</p>
+
+        <h4 data-i18n="rules.deckTitle">🃏 Montagem de Baralho</h4>
+        <p data-i18n="rules.deckText">Antes da partida, você escolhe manualmente os Pokémon do seu baralho — pode repetir a mesma espécie para já começar perto de uma evolução, ou preencher aleatoriamente se preferir surpresa.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal da Pokédex de Consulta (Otimizada com Abas e Cabeçalho Fixo) -->
+  <div id="modal-pokedex" class="modal-overlay hidden">
+    <div class="modal-card pokedex-modal">
+      <!-- Cabeçalho Fixo (Título e Botão de Fechar SEMPRE visíveis no topo) -->
+      <div class="pokedex-modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 class="modal-title" style="margin: 0;" data-i18n="pokedex.title">🔍 Pokédex de Consulta</h2>
+          <span class="diff-badge" style="background: rgba(56, 189, 248, 0.18); color: #38bdf8; margin: 0; font-size: 0.75rem;" id="pokedex-progress">151 Pokémon</span>
+        </div>
+        <button type="button" class="modal-close-btn btn-close-modal" aria-label="Fechar Pokédex">✕</button>
+      </div>
+
+      <!-- Abas de Navegação Fixas -->
+      <nav class="pokedex-tabs-nav">
+        <button type="button" class="pokedex-tab-btn active" data-tab="pokedex-tab-catalog" data-i18n="pokedex.tabCatalog">📖 Catálogo 151</button>
+        <button type="button" class="pokedex-tab-btn" data-tab="pokedex-tab-vs" data-i18n="pokedex.tabVs">⚖️ Simulador Elemental (VS)</button>
+        <button type="button" class="pokedex-tab-btn" data-tab="pokedex-tab-chart" data-i18n="pokedex.tabChart">📊 Tabela de Tipos</button>
+      </nav>
+
+      <!-- Corpo com Rolagem Interna Suave -->
+      <div class="pokedex-modal-body">
+        <!-- Aba 1: Catálogo 151 -->
+        <div id="pokedex-tab-catalog" class="pokedex-tab-content">
+          <input type="text" id="pokedex-browse-search" class="pokedex-browse-search" data-i18n-placeholder="pokedex.searchPlaceholder" placeholder="🔍 Buscar Pokémon por nome ou número..." autocomplete="off">
+          <div class="pokedex-grid" id="pokedex-grid"></div>
+        </div>
+
+        <!-- Aba 2: Simulador Elemental (VS) -->
+        <div id="pokedex-tab-vs" class="pokedex-tab-content hidden">
+          <p class="pokedex-subtitle" data-i18n="pokedex.subtitle" style="margin-bottom: 1rem; text-align: center;">
+            Roda a mesma função de vantagem elemental usada na batalha — o resultado aqui é sempre idêntico ao da arena.
+          </p>
+
+          <!-- Slots de comparação: mostram quem está selecionado para cada lado -->
+          <div class="pokedex-slots">
+            <div class="pokedex-slot" id="pokedex-slot-player"></div>
+            <span class="pokedex-vs">VS</span>
+            <div class="pokedex-slot" id="pokedex-slot-cpu"></div>
+          </div>
+
+          <div class="pokedex-turn-toggle" id="pokedex-turn-toggle">
+            <span class="pokedex-turn-label" data-i18n="pokedex.activeTurn">Turno ativo:</span>
+            <button class="pokedex-turn-btn selected" data-turn="player" type="button" data-i18n="pokedex.player">Jogador</button>
+            <button class="pokedex-turn-btn" data-turn="cpu" type="button" data-i18n="pokedex.cpu">CPU</button>
+          </div>
+
+          <div id="pokedex-result" class="pokedex-result"></div>
+        </div>
+
+        <!-- Aba 3: Tabela de Efetividade dos 18 Tipos -->
+        <div id="pokedex-tab-chart" class="pokedex-tab-content hidden">
+          <p class="pokedex-subtitle" style="margin-bottom: 1rem; text-align: center;">
+            Tabela completa de multiplicadores elementais oficiais da 1ª Geração (Dual-Type inclusos).
+          </p>
+          <div class="pokedex-chart-wrap" id="pokedex-chart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Evolução -->
+  <div id="modal-evolve" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close-btn btn-close-modal">✕</button>
+      <h2 class="modal-title" style="color: #ffd700;" data-i18n="evolve.title">✨ Super Fusão Pokémon!</h2>
+      <div id="evolve-modal-content">
+        <!-- Renderizado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Fim de Jogo (Vitória / Derrota) -->
+  <div id="modal-gameover" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2 id="gameover-banner" class="gameover-banner win">🏆 VITÓRIA!</h2>
+      <p id="gameover-reason" style="color: #cbd5e1; font-size: 1.05rem; margin-bottom: 1rem;"></p>
+
+      <div id="gameover-stats" class="stats-summary-grid">
+        <!-- Estatísticas preenchidas via JS -->
+      </div>
+
+      <button class="start-btn" id="btn-restart" style="width: 100%; margin-top: 1rem;" data-i18n="gameover.restart">
+        JOGAR NOVAMENTE 🔄
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de Abertura de Booster -->
+  <div id="modal-booster" class="modal-overlay hidden">
+    <div class="modal-card booster-modal">
+      <button class="modal-close-btn btn-close-modal">✕</button>
+      <h2 class="modal-title" data-i18n="booster.modalTitle">🎁 Abertura de Booster!</h2>
+      <p class="booster-subtitle" id="booster-modal-subtitle" data-i18n="booster.subtitle">Você abriu um pacote com 5 cartas aleatórias!</p>
+
+      <div class="booster-cards-grid" id="booster-cards-grid">
+        <!-- As 5 cartas reveladas dinamicamente via JS -->
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;">
+        <button class="action-btn-main hidden" id="btn-claim-booster" data-i18n="booster.claimBtn">GUARDAR NA COLEÇÃO ✨</button>
+        <button class="header-btn" id="btn-booster-dev-reset" style="opacity: 0.7; font-size: 0.8rem;" data-i18n="booster.testBtn">⚡ Booster Instantâneo (Dev)</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal do Starter Pack (Boas-vindas) -->
+  <div id="modal-starter" class="modal-overlay hidden">
+    <div class="modal-card starter-modal">
+      <h2 class="modal-title" style="color: #ffd700;" data-i18n="starter.title">🎒 Boas-vindas ao PokéTrunfo!</h2>
+      <p style="color: #cbd5e1; margin-bottom: 1rem;" data-i18n="starter.subtitle">Você recebeu seu Pacote Inicial de 20 cartas aleatórias para montar seu baralho!</p>
+
+      <div class="starter-cards-grid" id="starter-cards-grid">
+        <!-- Renderizado dinamicamente com as 20 cartas -->
+      </div>
+
+      <button class="start-btn" id="btn-starter-confirm" style="width: 100%; margin-top: 1.5rem;" data-i18n="starter.btn">
+        MONTAR MEU BARALHO ⚡
+      </button>
+    </div>
+  </div>
+
+  <!-- Inicialização dos Módulos JS -->
+  <script type="module">
+    import { initUI } from './js/ui.js';
+    window.addEventListener('DOMContentLoaded', () => {
+      initUI();
+    });
+  </script>
+</body>
+</html>
