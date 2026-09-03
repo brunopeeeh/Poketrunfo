@@ -3247,3 +3247,300 @@ body {
     transform: translateY(-2px);
   }
 }
+
+/* ==========================================================================
+   UX: resultado da rodada, confirmação de atributo, Jogar agora, sair da
+   partida, idioma atual.
+   ========================================================================== */
+
+/* Ocupa espaço mas não aparece — evita salto de layout quando um botão
+   entra e sai (hidden = display:none reflui tudo). */
+.invisible {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* --- Menu: CTA principal + secundário --- */
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 1.2rem;
+}
+
+.menu-hint {
+  font-size: 0.8rem;
+  color: var(--bone-dim);
+  margin: 0;
+}
+
+.menu-secondary-btn {
+  justify-content: center;
+  font-size: 0.92rem;
+  padding: 10px 14px;
+}
+
+/* --- Arena: status com altura reservada --- */
+.arena-status {
+  width: 100%;
+  /* Reserva o suficiente pra troca instrução -> resultado não puxar o botão
+     pra cima. O painel é o último da coluna, então o excedente cresce pra
+     baixo e as cartas acima nunca se mexem. */
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-cta {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+}
+
+.arena-cta > * {
+  grid-area: 1 / 1;
+}
+
+.arena-coin-note {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold-foil);
+  background: rgba(232, 185, 35, 0.12);
+  border: 1px solid var(--gold-foil-deep);
+  border-radius: 8px;
+  padding: 5px 12px;
+}
+
+/* --- Painel de resultado da rodada --- */
+.round-result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: popIn 0.3s ease-out;
+}
+
+.round-verdict {
+  font-family: 'Titan One', cursive;
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+}
+
+.round-verdict.win { color: var(--screen-green); text-shadow: 0 0 12px rgba(155, 188, 15, 0.6); }
+.round-verdict.lose { color: #f0897e; text-shadow: 0 0 12px rgba(210, 59, 46, 0.6); }
+.round-verdict.tie { color: var(--gold-foil); text-shadow: 0 0 12px rgba(232, 185, 35, 0.5); }
+
+.round-attr {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--bone-dim);
+}
+
+.round-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+}
+
+.round-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--ink-panel-2);
+  border-radius: 10px;
+  padding: 7px 8px;
+}
+
+.round-score-box.winner {
+  border-color: var(--screen-green);
+  box-shadow: 0 0 12px rgba(155, 188, 15, 0.4);
+}
+
+.round-score-box.loser {
+  border-color: var(--dex-red);
+  opacity: 0.8;
+}
+
+.round-score-box.tie {
+  border-color: var(--gold-foil-deep);
+}
+
+.round-score-who {
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bone-dim);
+}
+
+.round-score-val {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1rem;
+  color: #f4f1e8;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.round-score-box.winner .round-score-val { color: var(--screen-green); }
+.round-score-box.loser .round-score-val { color: #f0897e; }
+
+.round-score-vs {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.62rem;
+  color: var(--gold-foil);
+}
+
+.round-detail {
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.round-detail.win { color: var(--screen-green); }
+.round-detail.lose { color: #f0897e; }
+.round-detail.tie { color: var(--gold-foil); }
+
+.round-effect {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.round-effect.buff { color: #34d399; }
+.round-effect.nerf { color: #f87171; }
+
+/* --- Dano perto da barra de HP --- */
+.combatant-info {
+  position: relative;
+}
+
+.hp-damage-float {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1rem;
+  color: var(--dex-red);
+  text-shadow: 2px 2px 0 #000, 0 0 10px rgba(210, 59, 46, 0.8);
+  pointer-events: none;
+  z-index: 5;
+  animation: hpDamageFloat 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes hpDamageFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.7); }
+  15% { opacity: 1; transform: translateY(-10px) scale(1.15); }
+  75% { opacity: 1; transform: translateY(-28px) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.9); }
+}
+
+/* --- Starter: ações lado a lado --- */
+.starter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 1.2rem;
+}
+
+/* --- Sair da partida --- */
+.leave-modal {
+  max-width: 420px;
+}
+
+.leave-text {
+  color: #d8d2c4;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+}
+
+.leave-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.leave-actions > * {
+  flex: 1 1 45%;
+  justify-content: center;
+}
+
+/* --- Idioma atual em destaque --- */
+.lang-label b {
+  font-weight: 700;
+  color: var(--bone-dim);
+}
+
+.lang-label b.lang-on {
+  color: var(--gold-foil);
+}
+
+.lang-label i {
+  font-style: normal;
+  color: var(--bone-dim);
+  margin: 0 3px;
+  opacity: 0.6;
+}
+
+@media (max-width: 600px) {
+  .arena-status {
+    min-height: 62px;
+  }
+
+  .round-verdict {
+    font-size: 1.05rem;
+  }
+
+  .round-score {
+    max-width: 280px;
+    gap: 8px;
+  }
+
+  .round-score-val {
+    font-size: 0.85rem;
+  }
+
+  .round-detail {
+    font-size: 0.85rem;
+  }
+
+  .hp-damage-float {
+    font-size: 0.8rem;
+    right: 8px;
+  }
+
+  /* Sticky no wrapper de ações (antes era só no botão de confirmar) */
+  #btn-starter-confirm {
+    position: static;
+  }
+
+  #starter-actions {
+    position: sticky;
+    bottom: 0.4rem;
+    z-index: 2;
+    background: var(--ink-panel);
+    padding-top: 6px;
+  }
+}
+
+.menu-warning {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f0897e;
+  background: rgba(210, 59, 46, 0.14);
+  border: 1px solid var(--dex-red);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin: 0;
+}

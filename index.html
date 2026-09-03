@@ -14,6 +14,14 @@
   <link rel="stylesheet" href="css/coin.css">
 
   <link rel="icon" type="image/png" href="logo.png">
+
+  <!-- PWA: instalável na tela inicial e jogável offline -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PokéTrunfo">
 </head>
 <body>
 
@@ -22,7 +30,7 @@
 
   <!-- Cabeçalho Principal -->
   <header class="app-header">
-    <div class="logo-container" id="header-logo-home">
+    <div class="logo-container" id="header-logo-home" role="button" tabindex="0" data-i18n-aria="header.ariaHome" aria-label="Voltar ao menu">
       <img src="logo.png" alt="PokéTrunfo Logo" class="app-logo">
       <span class="game-title">POKÉTRUNFO</span>
     </div>
@@ -56,7 +64,7 @@
         </button>
         <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="40" data-i18n-aria="header.ariaVolume" aria-label="Volume do som" title="Volume">
         <button class="header-btn header-btn-sm" id="btn-lang" data-i18n-aria="header.ariaLang" aria-label="Alternar Idioma" title="Idioma">
-          <span>🌐</span> <span id="btn-lang-label">PT/EN</span>
+          <span>🌐</span> <span id="btn-lang-label" class="lang-label"><b class="lang-on">PT</b><i>/</i><b>EN</b></span>
         </button>
       </div>
     </div>
@@ -100,9 +108,12 @@
           </div>
         </div>
 
-        <button class="start-btn" id="btn-start-game" data-i18n="menu.startBtn" style="width: 100%; margin-top: 1.2rem;">
-          MONTAR BARALHO ⚡
-        </button>
+        <div class="menu-actions">
+          <button class="start-btn" id="btn-quick-play" data-i18n="menu.quickBtn">⚡ JOGAR AGORA</button>
+          <p class="menu-hint" data-i18n="menu.quickHint">Baralho automático, sem aposta e moeda sorteada na hora.</p>
+          <p class="menu-warning hidden" id="menu-quick-warning" role="status"></p>
+          <button class="header-btn menu-secondary-btn" id="btn-start-game" data-i18n="menu.startBtn">🃏 Montar meu baralho</button>
+        </div>
       </div>
     </section>
 
@@ -353,13 +364,25 @@
             ⚡ Pote de Disputa: 0
           </div>
 
-          <div class="round-action-text" id="arena-action-text" aria-live="polite" aria-atomic="true" data-i18n="battle.chooseAttribute">
-            Escolha um atributo da sua carta!
+          <div class="arena-coin-note hidden" id="arena-coin-note"></div>
+
+          <!-- Texto de instrução e painel de resultado dividem o mesmo espaço
+               reservado, pra nada pular quando a rodada resolve. -->
+          <div class="arena-status" aria-live="polite" aria-atomic="true">
+            <div class="round-action-text" id="arena-action-text" data-i18n="battle.chooseAttribute">
+              Escolha um atributo da sua carta!
+            </div>
+            <div class="round-result hidden" id="arena-result"></div>
           </div>
 
-          <button class="action-btn-main hidden" id="btn-next-round" data-i18n="battle.nextRound">
-            PRÓXIMA RODADA ➔
-          </button>
+          <!-- Os dois botões ocupam a mesma célula: só um é visível por vez,
+               e o espaço fica reservado mesmo quando nenhum está. -->
+          <div class="arena-cta">
+            <button class="action-btn-main invisible" id="btn-next-round" data-i18n="battle.nextRound">
+              PRÓXIMA RODADA ➔
+            </button>
+            <button class="action-btn-main invisible" id="btn-confirm-attr"></button>
+          </div>
 
           <!-- Abre a Pokédex já carregada com o confronto atual (carta do
                jogador vs carta da CPU no topo dos baralhos) -->
@@ -588,11 +611,24 @@
           <!-- Renderizado dinamicamente com as 20 cartas em 3D flip -->
         </div>
 
-        <button class="start-btn hidden" id="btn-starter-confirm" style="width: 100%; margin-top: 1.2rem;" data-i18n="starter.btn">
-          MONTAR MEU BARALHO ⚡
-        </button>
+        <div class="starter-actions hidden" id="starter-actions">
+          <button class="start-btn" id="btn-starter-quick" data-i18n="starter.quickBtn">⚡ JOGAR AGORA</button>
+          <button class="header-btn menu-secondary-btn" id="btn-starter-confirm" data-i18n="starter.btn">🃏 Montar meu baralho</button>
+        </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal: sair de uma partida em andamento -->
+  <div id="modal-leave" class="modal-overlay hidden">
+    <div class="modal-card leave-modal">
+      <h2 class="modal-title" data-i18n="leave.title">Sair da partida?</h2>
+      <p class="leave-text" data-i18n="leave.text">A partida em andamento será encerrada sem resultado. Sua carta apostada continua com você.</p>
+      <div class="leave-actions">
+        <button type="button" class="header-btn" id="btn-leave-cancel" data-i18n="leave.cancel">Continuar jogando</button>
+        <button type="button" class="action-btn-main" id="btn-leave-confirm" data-i18n="leave.confirm">Sair</button>
+      </div>
     </div>
   </div>
 
@@ -602,6 +638,13 @@
     window.addEventListener('DOMContentLoaded', () => {
       initUI();
     });
+
+    // PWA: só registra em http(s); em file:// o navegador rejeita.
+    if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>

@@ -763,3 +763,26 @@
     box-shadow: none;
   }
 }
+
+/* ==========================================================================
+   Seleção de atributo: melhor atributo marcado e estado "pendente" (toque)
+   ========================================================================== */
+.stat-best-marker {
+  font-size: 0.6rem;
+  color: #e8b923;
+  text-shadow: 0 0 6px rgba(232, 185, 35, 0.8);
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.stat-row.pending {
+  background: rgba(232, 185, 35, 0.22) !important;
+  border-color: #e8b923 !important;
+  box-shadow: 0 0 0 2px rgba(232, 185, 35, 0.35), 0 0 14px rgba(232, 185, 35, 0.5);
+  animation: pendingPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes pendingPulse {
+  from { box-shadow: 0 0 0 2px rgba(232, 185, 35, 0.35), 0 0 8px rgba(232, 185, 35, 0.4); }
+  to { box-shadow: 0 0 0 2px rgba(232, 185, 35, 0.6), 0 0 18px rgba(232, 185, 35, 0.8); }
+}
