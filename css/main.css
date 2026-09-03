@@ -1275,6 +1275,20 @@ body {
   font-size: 0.85rem;
 }
 
+/* Barra de ação (Voltar/Confirmar) fixa no rodapé da viewport — a grade acima
+   pode ter até 151 Pokémon e crescer bastante, então o botão de confirmar
+   precisa continuar acessível sem depender de rolar até o fim da lista. */
+.deckbuilder-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--ink-panel);
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--surface-border);
+}
+
 .pokedex-mini-art {
   width: 56px;
   height: 56px;
