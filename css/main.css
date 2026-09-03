@@ -1990,10 +1990,12 @@ body {
   flex-direction: column;
   align-items: center;
   position: sticky;
-  /* Header também é sticky e quebra em 1-3 linhas dependendo da largura da
-     tela — --header-height é medida ao vivo via ResizeObserver (ui.js) pra
-     este painel nunca ficar encoberto por baixo dele. */
+  /* Header também é sticky, quebra em 1-3 linhas dependendo da largura da tela
+     e some ao rolar pra baixo — --header-height é mantida ao vivo (ui.js) pra
+     este painel nunca ficar encoberto por baixo dele nem sobrar vão vazio
+     quando o header some. */
   top: calc(var(--header-height, 84px) + 10px);
+  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .col-inspect-preview {

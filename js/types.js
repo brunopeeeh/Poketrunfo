@@ -278,3 +278,28 @@ export function getWeaknesses(types) {
     .filter(w => w.multiplier > 1)
     .sort((a, b) => b.multiplier - a.multiplier);
 }
+
+/**
+ * Lista os tipos contra os quais este Pokémon causa dano Super Efetivo (x2),
+ * combinando os tipos de ataque do Pokémon (se for Dual-Type, une ambos).
+ */
+export function getStrengths(types) {
+  const attackerTypes = types || ['normal'];
+  const targets = new Map();
+
+  for (const atkType of attackerTypes) {
+    const chart = TYPE_CHART[atkType] || {};
+    for (const [defType, mult] of Object.entries(chart)) {
+      if (mult > 1) {
+        const current = targets.get(defType) || 1;
+        if (mult > current) {
+          targets.set(defType, mult);
+        }
+      }
+    }
+  }
+
+  return Array.from(targets.entries())
+    .map(([type, multiplier]) => ({ type, multiplier }))
+    .sort((a, b) => b.multiplier - a.multiplier);
+}

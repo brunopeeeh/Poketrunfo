@@ -13,7 +13,7 @@ import {
 } from './api.js';
 import { state, DIFFICULTY_CONFIG } from './state.js';
 import { sound } from './audio.js';
-import { TYPE_CHART, calculateTypeAdvantage, getWeaknesses } from './types.js';
+import { TYPE_CHART, calculateTypeAdvantage, getWeaknesses, getStrengths } from './types.js';
 import {
   loadCollection,
   saveCollection,
@@ -68,14 +68,21 @@ let confettiAnimId = null;
 // Timer de Booster
 let boosterTimerInterval = null;
 
-// Header é sticky e quebra em 1-3 linhas conforme a largura da tela. Mede a
-// altura real e publica em --header-height, pra elementos como o inspetor de
-// carta da Coleção (também sticky) saberem por onde começar sem ficar cobertos.
+// Header é sticky, quebra em 1-3 linhas conforme a largura da tela e some ao
+// rolar pra baixo (setupHeaderScrollBehavior). --header-height reflete o
+// espaço que ele está OCUPANDO agora (altura real quando visível, 0 quando
+// escondido), pra elementos como o inspetor de carta da Coleção (também
+// sticky) saberem por onde começar sem sobrar vão vazio nem ficar cobertos.
+let headerBaseHeight = 0;
+
 function observeHeaderHeight() {
   const header = document.querySelector('.app-header');
   if (!header) return;
   const update = () => {
-    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+    headerBaseHeight = header.offsetHeight;
+    if (!header.classList.contains('header-hidden')) {
+      document.documentElement.style.setProperty('--header-height', `${headerBaseHeight}px`);
+    }
   };
   update();
   new ResizeObserver(update).observe(header);
@@ -84,6 +91,12 @@ function observeHeaderHeight() {
 function setupHeaderScrollBehavior() {
   const header = document.querySelector('.app-header');
   if (!header) return;
+
+  const setHidden = (hidden) => {
+    header.classList.toggle('header-hidden', hidden);
+    header.inert = hidden; // tira botões escondidos do foco/tab enquanto fora da tela
+    document.documentElement.style.setProperty('--header-height', hidden ? '0px' : `${headerBaseHeight}px`);
+  };
 
   let lastScrollY = window.scrollY;
   let ticking = false;
@@ -95,15 +108,15 @@ function setupHeaderScrollBehavior() {
 
         // Se estiver no topo (<= 25px), sempre mostra o cabeçalho
         if (currentScrollY <= 25) {
-          header.classList.remove('header-hidden');
-        } 
+          setHidden(false);
+        }
         // Se rolou para baixo e passou de 60px, esconde o cabeçalho
         else if (currentScrollY > lastScrollY && currentScrollY > 60) {
-          header.classList.add('header-hidden');
-        } 
+          setHidden(true);
+        }
         // Se rolou para cima (voltando em direção ao topo), reexibe
         else if (currentScrollY < lastScrollY) {
-          header.classList.remove('header-hidden');
+          setHidden(false);
         }
 
         lastScrollY = currentScrollY;
@@ -1981,6 +1994,7 @@ function renderCollectionInspector(card, isOwned, unevolvedCount) {
   const primaryType = card.types?.[0] || 'normal';
   const typeStyle = TYPE_TRANSLATIONS[primaryType] || TYPE_TRANSLATIONS.normal;
   const lang = getLang();
+  const strengths = getStrengths(card.types || ['normal']);
   const weaknesses = getWeaknesses(card.types || ['normal']);
   const totalStats = (card.hp || 0) + (card.attack || 0) + (card.defense || 0)
     + (card.spAttack || 0) + (card.spDefense || 0) + (card.speed || 0);
@@ -2039,15 +2053,29 @@ function renderCollectionInspector(card, isOwned, unevolvedCount) {
         <strong style="color: ${isOwned ? '#34d399' : '#f87171'};">${isOwned ? t('collection.ownedCount', { count: card.ownedCount }) : 'Não obtida'}</strong>
       </div>
 
+      <!-- Vantagens Elementais (Forte contra) -->
+      <div style="margin-top: 10px;">
+        <span style="font-size: 0.75rem; color: #34d399; font-weight: 700;">✨ ${t('battle.strongAgainst')}:</span>
+        <div class="col-inspect-weaknesses">
+          ${strengths.length > 0 
+            ? strengths.map(s => {
+                const info = TYPE_TRANSLATIONS[s.type] || { name: s.type, color: '#666' };
+                return `<span class="type-pill" style="background-color: ${info.color}; font-size: 0.65rem; padding: 2px 6px;">${getTypeName(s.type, lang)} (x${s.multiplier})</span>`;
+              }).join('')
+            : '<span style="font-size: 0.75rem; color: #64748b;">Nenhum</span>'}
+        </div>
+      </div>
+
+      <!-- Desvantagens Elementais (Fraco contra) -->
       <div style="margin-top: 8px;">
-        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700;">⚠️ ${t('battle.weakTo')}:</span>
+        <span style="font-size: 0.75rem; color: #f87171; font-weight: 700;">⚠️ ${t('battle.weakTo')}:</span>
         <div class="col-inspect-weaknesses">
           ${weaknesses.length > 0 
             ? weaknesses.map(w => {
                 const info = TYPE_TRANSLATIONS[w.type] || { name: w.type, color: '#666' };
                 return `<span class="type-pill" style="background-color: ${info.color}; font-size: 0.65rem; padding: 2px 6px;">${getTypeName(w.type, lang)} (x${w.multiplier})</span>`;
               }).join('')
-            : '<span style="font-size: 0.75rem; color: #64748b;">Nenhuma</span>'}
+            : '<span style="font-size: 0.75rem; color: #64748b;">Nenhum</span>'}
         </div>
       </div>
 

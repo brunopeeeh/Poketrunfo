@@ -83,6 +83,7 @@ const DICT = {
       tieResult: '({{p}} vs {{c}}) - Cartas foram para o Pote de Disputa!',
       bonusApplied: '✨ Bônus Elemental de +20% aplicado!',
       penaltyApplied: '⚠️ Penalidade de -20% por desvantagem!',
+      strongAgainst: 'Forte contra',
       weakTo: 'Fraco contra'
     },
     stat: {
@@ -310,6 +311,7 @@ const DICT = {
       tieResult: '({{p}} vs {{c}}) - Cards went to the Dispute Pot!',
       bonusApplied: '✨ +20% Elemental Bonus applied!',
       penaltyApplied: '⚠️ -20% Penalty for disadvantage!',
+      strongAgainst: 'Strong against',
       weakTo: 'Weak to'
     },
     stat: {
