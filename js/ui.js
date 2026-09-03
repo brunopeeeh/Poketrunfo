@@ -1276,7 +1276,12 @@ function renderPokedexGrid(filterText) {
         <div class="pokedex-mini-name">${p.name}</div>
         <div class="pokedex-mini-types">${fmtPokedexTypes(p.types)}</div>
         <div class="pokedex-mini-stats">
-          <span>⚔️ ${p.attack}</span><span>🛡️ ${p.defense}</span><span>⚡ ${p.speed}</span>
+          <span title="${t('stat.hp')}">❤️ ${p.hp}</span>
+          <span title="${t('stat.attack')}">⚔️ ${p.attack}</span>
+          <span title="${t('stat.defense')}">🛡️ ${p.defense}</span>
+          <span title="${t('stat.spAttack')}">✨ ${p.spAttack}</span>
+          <span title="${t('stat.spDefense')}">🌀 ${p.spDefense}</span>
+          <span title="${t('stat.speed')}">⚡ ${p.speed}</span>
         </div>
         <div class="pokedex-mini-actions">
           <button type="button" class="pokedex-pick-btn pick-player ${isPlayer ? 'active' : ''}" data-slot="player" data-id="${p.id}">${t('pokedex.player')}</button>
@@ -1544,7 +1549,12 @@ function renderDeckBuilderGrid(filterText) {
           return `<span class="type-pill" style="background-color: ${tInfo.color}">${getTypeName(ty, lang)}</span>`;
         }).join('')}</div>
         <div class="pokedex-mini-stats">
-          <span>⚔️ ${p.attack}</span><span>🛡️ ${p.defense}</span><span>⚡ ${p.speed}</span>
+          <span title="${t('stat.hp')}">❤️ ${p.hp}</span>
+          <span title="${t('stat.attack')}">⚔️ ${p.attack}</span>
+          <span title="${t('stat.defense')}">🛡️ ${p.defense}</span>
+          <span title="${t('stat.spAttack')}">✨ ${p.spAttack}</span>
+          <span title="${t('stat.spDefense')}">🌀 ${p.spDefense}</span>
+          <span title="${t('stat.speed')}">⚡ ${p.speed}</span>
         </div>
         <div class="pokedex-mini-actions">
           <button type="button" class="pokedex-pick-btn deckbuilder-add-btn" data-id="${p.id}" ${canAdd ? '' : 'disabled'}>
@@ -1602,7 +1612,7 @@ function renderWagerMiniCardHtml(card) {
   const typeStyle = TYPE_TRANSLATIONS[primaryType] || TYPE_TRANSLATIONS.normal;
 
   return `
-    <div class="pokemon-card rank-${rank.toLowerCase()} ${card.isEvolved ? 'evolved' : ''}" style="width: 180px; height: 260px; cursor: default;">
+    <div class="pokemon-card rank-${rank.toLowerCase()} ${card.isEvolved ? 'evolved' : ''}" style="width: 180px; min-height: 275px; cursor: default;">
       <div class="card-face card-front" style="border-color: ${typeStyle.color}; padding: 8px;">
         <div class="card-header" style="margin-bottom: 4px;">
           <div class="card-title-group">
@@ -1611,13 +1621,13 @@ function renderWagerMiniCardHtml(card) {
           </div>
           <span class="card-id" style="font-size: 0.55rem;">#${String(card.id).padStart(3, '0')}</span>
         </div>
-        <div class="card-artwork-box" style="height: 105px; background: ${typeStyle.bg}">
+        <div class="card-artwork-box" style="height: 90px; background: ${typeStyle.bg}">
           <img src="${card.image}" alt="${card.name}" class="card-artwork loaded">
         </div>
         <div class="card-stats" style="gap: 2px;">
-          <div class="stat-row" style="padding: 2px 4px;"><span class="stat-label">⚔️ Ataque</span><span class="stat-value">${card.attack}</span></div>
-          <div class="stat-row" style="padding: 2px 4px;"><span class="stat-label">🛡️ Defesa</span><span class="stat-value">${card.defense}</span></div>
-          <div class="stat-row" style="padding: 2px 4px;"><span class="stat-label">⚡ Velocidade</span><span class="stat-value">${card.speed}</span></div>
+          ${STAT_DEFS.map(({ attr, icon, i18nKey }) => `
+            <div class="stat-row" style="padding: 2px 4px;"><span class="stat-label">${icon} ${t(i18nKey)}</span><span class="stat-value">${card[attr]}</span></div>
+          `).join('')}
         </div>
       </div>
     </div>
@@ -1725,7 +1735,14 @@ function openBoosterModal() {
             <span class="card-rank-badge rank-${rank.toLowerCase()}" style="align-self: flex-end;">${rank}</span>
             <img src="${card.image}" alt="${card.name}" class="booster-mini-art">
             <div style="font-weight: 800; font-size: 0.85rem; margin-bottom: 2px;">${card.name}</div>
-            <div style="font-size: 0.7rem; color: #94a3b8;">⚔️ ${card.attack} | 🛡️ ${card.defense} | ⚡ ${card.speed}</div>
+            <div class="pokedex-mini-stats" style="margin-top: 4px; font-size: 0.62rem;">
+              <span title="${t('stat.hp')}">❤️ ${card.hp}</span>
+              <span title="${t('stat.attack')}">⚔️ ${card.attack}</span>
+              <span title="${t('stat.defense')}">🛡️ ${card.defense}</span>
+              <span title="${t('stat.spAttack')}">✨ ${card.spAttack}</span>
+              <span title="${t('stat.spDefense')}">🌀 ${card.spDefense}</span>
+              <span title="${t('stat.speed')}">⚡ ${card.speed}</span>
+            </div>
           </div>
           <div class="booster-card-face back"></div>
         </div>
@@ -1941,10 +1958,16 @@ function renderCollectionGridAndInspector() {
     switch (collectionState.sortCriterion) {
       case 'rank':
         return (rankOrder[b.rank || 'C'] || 0) - (rankOrder[a.rank || 'C'] || 0);
+      case 'hp':
+        return (b.hp || 0) - (a.hp || 0);
       case 'attack':
         return (b.attack || 0) - (a.attack || 0);
       case 'defense':
         return (b.defense || 0) - (a.defense || 0);
+      case 'spAttack':
+        return (b.spAttack || 0) - (a.spAttack || 0);
+      case 'spDefense':
+        return (b.spDefense || 0) - (a.spDefense || 0);
       case 'speed':
         return (b.speed || 0) - (a.speed || 0);
       case 'copies':
@@ -1980,8 +2003,13 @@ function renderCollectionGridAndInspector() {
              style="width: 86px; height: 86px; object-fit: contain; ${card.isOwned ? '' : 'filter: grayscale(1) brightness(0.35);'}">
         <div class="pokedex-mini-id" style="font-size: 0.68rem;">#${String(card.id).padStart(3, '0')}</div>
         <div class="pokedex-mini-name" style="font-size: 0.8rem;">${card.isOwned ? card.name : '???'}</div>
-        <div class="pokedex-mini-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 8px; font-size: 0.7rem; width: 100%;">
-          <span title="HP">❤️${card.hp}</span><span title="${t('stat.attack')}">⚔️${card.attack}</span><span title="${t('stat.defense')}">🛡️${card.defense}</span><span title="${t('stat.speed')}">⚡${card.speed}</span>
+        <div class="pokedex-mini-stats">
+          <span title="${t('stat.hp')}">❤️${card.hp}</span>
+          <span title="${t('stat.attack')}">⚔️${card.attack}</span>
+          <span title="${t('stat.defense')}">🛡️${card.defense}</span>
+          <span title="${t('stat.spAttack')}">✨${card.spAttack}</span>
+          <span title="${t('stat.spDefense')}">🌀${card.spDefense}</span>
+          <span title="${t('stat.speed')}">⚡${card.speed}</span>
         </div>
       </div>
     `;
@@ -2176,8 +2204,13 @@ function setupStarterModal(starterCards) {
             <span class="card-rank-badge rank-${rank.toLowerCase()}" style="position: absolute; top: 4px; left: 4px; font-size: 0.5rem; padding: 1px 4px;">${rank}</span>
             <img src="${card.image}" alt="${card.name}" class="pokedex-mini-art" style="margin-top: 2px;">
             <div class="pokedex-mini-name" style="font-size: 0.75rem; margin-top: 2px;">${card.name}</div>
-            <div class="pokedex-mini-stats" style="font-size: 0.62rem;">
-              <span>⚔️${card.attack}</span><span>🛡️${card.defense}</span><span>⚡${card.speed}</span>
+            <div class="pokedex-mini-stats" style="font-size: 0.6rem; margin-top: 2px;">
+              <span title="${t('stat.hp')}">❤️${card.hp}</span>
+              <span title="${t('stat.attack')}">⚔️${card.attack}</span>
+              <span title="${t('stat.defense')}">🛡️${card.defense}</span>
+              <span title="${t('stat.spAttack')}">✨${card.spAttack}</span>
+              <span title="${t('stat.spDefense')}">🌀${card.spDefense}</span>
+              <span title="${t('stat.speed')}">⚡${card.speed}</span>
             </div>
           </div>
         </div>

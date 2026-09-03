@@ -1263,6 +1263,30 @@ body {
   gap: 4px;
 }
 
+.pokedex-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px 2px;
+  width: 100%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--bone);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 4px 2px;
+  margin: 3px 0;
+  text-align: center;
+}
+
+.pokedex-mini-stats span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
 .pokedex-mini-badge {
   position: absolute;
   top: 4px;
