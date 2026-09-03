@@ -16,6 +16,22 @@
   }
 }
 
+@media (max-width: 480px) {
+  :root {
+    --card-width: 215px;
+    --card-height: 340px;
+    --card-radius: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --card-width: 195px;
+    --card-height: 315px;
+    --card-radius: 10px;
+  }
+}
+
 /* Container do Slot de Cartas */
 .card-slot {
   perspective: 1200px;
