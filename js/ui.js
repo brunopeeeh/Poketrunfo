@@ -286,6 +286,10 @@ export function showScreen(screenKey) {
   if (screens[screenKey]) {
     screens[screenKey].classList.remove('hidden');
   }
+  // Marca a tela atual no body: durante uma partida o cabeçalho enxuga
+  // (ver css/main.css), porque Coleção/Pokédex/Regras/Booster não têm o que
+  // fazer no meio do combate — só roubam espaço vertical e atenção.
+  document.body.dataset.screen = screenKey;
 }
 
 // ==========================================================================
