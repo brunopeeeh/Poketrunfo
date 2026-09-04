@@ -56,7 +56,8 @@ const modals = {
   gameover: document.getElementById('modal-gameover'),
   pokedex: document.getElementById('modal-pokedex'),
   booster: document.getElementById('modal-booster'),
-  starter: document.getElementById('modal-starter')
+  starter: document.getElementById('modal-starter'),
+  leave: document.getElementById('modal-leave')
 };
 
 // Canvas para Confetti
@@ -147,6 +148,7 @@ export function initUI() {
   updateMuteButtonLabel();
   updateLangButtonLabel();
   setupEventListeners();
+  setupLeaveModal();
   setupConfetti();
   startBoosterTimer();
   observeHeaderHeight();
@@ -182,7 +184,71 @@ function updateMuteButtonLabel() {
 
 function updateLangButtonLabel() {
   const label = document.getElementById('btn-lang-label');
-  if (label) label.textContent = getLang() === 'pt' ? 'EN' : 'PT';
+  if (!label) return;
+  const isPt = getLang() === 'pt';
+  label.innerHTML = `<b class="${isPt ? 'lang-on' : ''}">PT</b><i>/</i><b class="${isPt ? '' : 'lang-on'}">EN</b>`;
+}
+
+// ==========================================================================
+// Partida em andamento: sair pelo cabeçalho (logo, Coleção) encerraria a
+// partida em silêncio. Pede confirmação antes.
+// ==========================================================================
+function isMatchInProgress() {
+  return !screens.battle?.classList.contains('hidden')
+    && modals.gameover?.classList.contains('hidden');
+}
+
+let pendingLeaveAction = null;
+
+function guardMatch(action) {
+  if (!isMatchInProgress()) {
+    action();
+    return;
+  }
+  pendingLeaveAction = action;
+  openModal(modals.leave);
+}
+
+function setupLeaveModal() {
+  document.getElementById('btn-leave-cancel')?.addEventListener('click', () => {
+    sound.playClick();
+    pendingLeaveAction = null;
+    closeModal(modals.leave);
+  });
+  document.getElementById('btn-leave-confirm')?.addEventListener('click', () => {
+    sound.playClick();
+    closeModal(modals.leave);
+    stopConfetti();
+    const action = pendingLeaveAction;
+    pendingLeaveAction = null;
+    action?.();
+  });
+
+  const logo = document.getElementById('header-logo-home');
+  const goHome = () => {
+    sound.playClick();
+    guardMatch(() => showScreen('menu'));
+  };
+  logo?.addEventListener('click', goHome);
+  logo?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goHome();
+    }
+  });
+}
+
+// Pokémon que o jogador possui de fato (inventário). É o mesmo número que a
+// tela de Coleção mostra — a Pokédex e o fim de jogo usam este aqui também,
+// senão o jogador vê dois "X / 151" diferentes.
+function getInventory() {
+  const inMemory = state.playerInventory;
+  if (inMemory && inMemory.length > 0) return inMemory;
+  return loadInventory() || [];
+}
+
+function ownedPokemonIds() {
+  return new Set(getInventory().map(c => c.id));
 }
 
 // Re-renderiza só as partes dinâmicas (geradas via innerHTML em JS) que estão
@@ -309,6 +375,10 @@ function setupEventListeners() {
   const pokedexBtn = document.getElementById('btn-pokedex');
   pokedexBtn?.addEventListener('click', () => {
     sound.playClick();
+    // Re-renderiza: o conteúdo é montado no setup e ficaria congelado no
+    // estado do carregamento da página (contador e badges desatualizados).
+    renderPokedexGrid(document.getElementById('pokedex-browse-search')?.value || '');
+    renderPokedexSlots();
     openModal(modals.pokedex);
   });
   setupPokedexModal();
@@ -357,7 +427,7 @@ function setupEventListeners() {
   const inventoryBtn = document.getElementById('btn-inventory');
   inventoryBtn?.addEventListener('click', () => {
     sound.playClick();
-    openCollectionScreen();
+    guardMatch(() => openCollectionScreen());
   });
 
   const menuCollectionBtn = document.getElementById('btn-menu-collection');
@@ -400,12 +470,24 @@ function setupEventListeners() {
     setTimeout(() => openBoosterModal(), 200);
   });
 
-  // Starter Pack Confirm
+  // Starter Pack: jogar agora (CTA principal) ou montar o baralho à mão
   const starterConfirmBtn = document.getElementById('btn-starter-confirm');
   starterConfirmBtn?.addEventListener('click', () => {
     sound.playClick();
     closeModal(modals.starter);
     openDeckBuilder(selectedDifficulty);
+  });
+
+  document.getElementById('btn-starter-quick')?.addEventListener('click', () => {
+    sound.playClick();
+    closeModal(modals.starter);
+    startQuickPlay();
+  });
+
+  // Menu: Jogar agora
+  document.getElementById('btn-quick-play')?.addEventListener('click', () => {
+    sound.playClick();
+    startQuickPlay();
   });
 
   // Wager Screen Confirm & Back
@@ -459,11 +541,20 @@ function setupEventListeners() {
   const nextRoundBtn = document.getElementById('btn-next-round');
   nextRoundBtn?.addEventListener('click', () => {
     sound.playClick();
-    nextRoundBtn.classList.add('hidden');
+    nextRoundBtn.classList.add('invisible');
+    document.getElementById('arena-coin-note')?.classList.add('hidden');
     renderArena();
     if (state.currentTurn === 'cpu') {
       triggerCpuTurn();
     }
+  });
+
+  // Confirmação do atributo (toque: 1º seleciona, 2º dispara)
+  document.getElementById('btn-confirm-attr')?.addEventListener('click', () => {
+    if (state.isAnimating || !pendingAttr) return;
+    const attr = pendingAttr;
+    clearPendingAttr();
+    handlePlayerChoice(attr);
   });
 
   // Botão de Analisar o Confronto Atual na Pokédex
@@ -551,6 +642,8 @@ function handleCoinToss(playerChoice) {
 
 // Renderiza a Arena de Combate
 export function renderArena() {
+  clearPendingAttr();
+  showRoundResult(null);
   updateStatusBars();
   renderPlayerCard();
   revealPlayerCard();
@@ -650,7 +743,100 @@ function updateCenterControls() {
     }
   }
 
-  nextRoundBtn?.classList.add('hidden');
+  nextRoundBtn?.classList.add('invisible');
+}
+
+// ==========================================================================
+// Painel de resultado da rodada: quem venceu, os dois valores lado a lado
+// e o que aconteceu com o HP — legível num olhar, no lugar do parágrafo.
+// ==========================================================================
+function showRoundResult(result) {
+  const panel = document.getElementById('arena-result');
+  const actionText = document.getElementById('arena-action-text');
+  if (!panel) return;
+
+  if (!result) {
+    panel.classList.add('hidden');
+    panel.innerHTML = '';
+    actionText?.classList.remove('hidden');
+    return;
+  }
+
+  const attrName = t(`stat.${result.attribute}`);
+  const verdictClass = result.winner === 'player' ? 'win' : (result.winner === 'cpu' ? 'lose' : 'tie');
+  const verdictText = result.winner === 'player'
+    ? t('battle.playerWonRound')
+    : (result.winner === 'cpu' ? t('battle.cpuWonRound') : t('battle.tieRound'));
+
+  const pBox = result.winner === 'player' ? 'winner' : (result.winner === 'cpu' ? 'loser' : 'tie');
+  const cBox = result.winner === 'cpu' ? 'winner' : (result.winner === 'player' ? 'loser' : 'tie');
+
+  const modTag = (mod) => {
+    if (mod > 1) return '<span class="stat-mod-pill buff">+20%</span>';
+    if (mod < 1) return '<span class="stat-mod-pill nerf">-20%</span>';
+    return '';
+  };
+
+  let detail = '';
+  if (result.winner === 'player') detail = t('battle.detailCpuLost', { dmg: result.damage });
+  else if (result.winner === 'cpu') detail = t('battle.detailPlayerLost', { dmg: result.damage });
+  else detail = t('battle.detailTie');
+
+  let effect = '';
+  if (result.typeAdvantage?.advantage === 'player') effect = `<span class="round-effect buff">${t('battle.bonusApplied')}</span>`;
+  else if (result.typeAdvantage?.advantage === 'cpu') effect = `<span class="round-effect nerf">${t('battle.penaltyApplied')}</span>`;
+
+  panel.innerHTML = `
+    <div class="round-verdict ${verdictClass}">${verdictText}</div>
+    <div class="round-attr">${t('battle.disputeOf', { attr: attrName })}</div>
+    <div class="round-score">
+      <div class="round-score-box ${pBox}">
+        <span class="round-score-who">${t('battle.scoreYou')}</span>
+        <span class="round-score-val">${result.playerVal}${modTag(result.typeAdvantage?.playerModifier ?? 1)}</span>
+      </div>
+      <span class="round-score-vs">VS</span>
+      <div class="round-score-box ${cBox}">
+        <span class="round-score-who">${t('battle.scoreCpu')}</span>
+        <span class="round-score-val">${result.cpuVal}${modTag(result.typeAdvantage?.cpuModifier ?? 1)}</span>
+      </div>
+    </div>
+    <div class="round-detail ${verdictClass}">${detail}</div>
+    ${effect}
+  `;
+  actionText?.classList.add('hidden');
+  panel.classList.remove('hidden');
+}
+
+// ==========================================================================
+// Confirmação de atributo em telas de toque: o 1º toque só seleciona a linha
+// (e mostra o botão "Disputar"); o 2º toque na mesma linha, ou o botão,
+// dispara a rodada. Evita rodada perdida por toque errado numa linha de 24px.
+// No desktop (mouse) continua 1 clique.
+// ==========================================================================
+let pendingAttr = null;
+
+function needsAttrConfirm() {
+  return window.matchMedia('(hover: none)').matches;
+}
+
+function clearPendingAttr() {
+  pendingAttr = null;
+  document.querySelectorAll('#player-card-slot .stat-row.pending').forEach(r => r.classList.remove('pending'));
+  document.getElementById('btn-confirm-attr')?.classList.add('invisible');
+}
+
+function setPendingAttr(attr) {
+  pendingAttr = attr;
+  document.querySelectorAll('#player-card-slot .stat-row').forEach(r => {
+    r.classList.toggle('pending', r.dataset.attr === attr);
+  });
+  const btn = document.getElementById('btn-confirm-attr');
+  if (btn) {
+    btn.textContent = t('battle.confirmAttr', { attr: t(`stat.${attr}`) });
+    btn.classList.remove('invisible');
+  }
+  const actionText = document.getElementById('arena-action-text');
+  if (actionText) actionText.textContent = t('battle.tapToConfirm', { attr: t(`stat.${attr}`) });
 }
 
 // Indicador de fraqueza: lista os tipos que causam dano Super Efetivo (x2+)
@@ -691,11 +877,18 @@ function renderStatRows(card, { selectable = false, highlightAttr = null, result
     return baseVal;
   };
 
+  // Melhor atributo da carta (só quando o jogador vai escolher): um marcador
+  // discreto poupa a comparação mental das 6 linhas e não revela nada da CPU.
+  const bestAttr = selectable
+    ? STAT_DEFS.reduce((best, d) => (card[d.attr] > card[best.attr] ? d : best), STAT_DEFS[0]).attr
+    : null;
+
   return STAT_DEFS.map(({ attr, icon, i18nKey }) => `
-    <div class="stat-row ${selectable ? 'selectable' : ''} ${highlightAttr === attr ? `selected highlight-${resultType}` : ''}" data-attr="${attr}">
+    <div class="stat-row ${selectable ? 'selectable' : ''} ${bestAttr === attr ? 'best' : ''} ${highlightAttr === attr ? `selected highlight-${resultType}` : ''}" data-attr="${attr}" ${bestAttr === attr ? `title="${t('battle.bestStat')}"` : ''}>
       <div class="stat-info">
         <span class="stat-icon">${icon}</span>
         <span class="stat-label">${t(i18nKey)}</span>
+        ${bestAttr === attr ? '<span class="stat-best-marker" aria-hidden="true">★</span>' : ''}
       </div>
       <span class="stat-value">${formatStatValue(attr, card[attr])}</span>
     </div>
@@ -754,6 +947,12 @@ function renderPlayerCard(highlightAttr = null, resultType = null, cardOverride 
       row.addEventListener('click', () => {
         if (state.isAnimating) return;
         const attr = row.dataset.attr;
+        if (needsAttrConfirm() && pendingAttr !== attr) {
+          sound.playClick();
+          setPendingAttr(attr);
+          return;
+        }
+        clearPendingAttr();
         handlePlayerChoice(attr);
       });
     });
@@ -913,6 +1112,7 @@ function processCombatRound(attribute) {
       pCardEl?.classList.add('winner-anim');
       cCardEl?.classList.add('damage-shake');
       showFloatingDamage('cpu-card-slot', `-${result.damage} HP`);
+      showHpDamage('cpu', result.damage);
     } else if (result.winner === 'cpu') {
       pResultType = 'loser';
       cResultType = 'winner';
@@ -920,27 +1120,11 @@ function processCombatRound(attribute) {
       cCardEl?.classList.add('winner-anim');
       pCardEl?.classList.add('damage-shake');
       showFloatingDamage('player-card-slot', `-${result.damage} HP`);
+      showHpDamage('player', result.damage);
     }
 
-    // Mensagem de resultado da rodada
-    const actionText = document.getElementById('arena-action-text');
-
-    if (actionText) {
-      let effectDetail = '';
-      if (result.typeAdvantage.advantage === 'player') {
-        effectDetail = `<div style="font-size:0.75rem; color:#34d399; margin-top:2px;">${t('battle.bonusApplied')}</div>`;
-      } else if (result.typeAdvantage.advantage === 'cpu') {
-        effectDetail = `<div style="font-size:0.75rem; color:#f87171; margin-top:2px;">${t('battle.penaltyApplied')}</div>`;
-      }
-
-      if (result.winner === 'player') {
-        actionText.innerHTML = `<span style="color:#10b981">${t('battle.playerWonRound')}</span> ${t('battle.dealtDamage', { p: result.playerVal, c: result.cpuVal, dmg: result.damage })}${effectDetail}`;
-      } else if (result.winner === 'cpu') {
-        actionText.innerHTML = `<span style="color:#ef4444">${t('battle.cpuWonRound')}</span> ${t('battle.dealtDamage', { p: result.cpuVal, c: result.playerVal, dmg: result.damage })}${effectDetail}`;
-      } else {
-        actionText.innerHTML = `<span style="color:#f59e0b">${t('battle.tieRound')}</span> ${t('battle.tieResult', { p: result.playerVal, c: result.cpuVal })}${effectDetail}`;
-      }
-    }
+    // Painel de resultado da rodada
+    showRoundResult(result);
 
     // 3. Só re-renderiza (com highlights e modificadores) depois que o choque terminou de tocar
     setTimeout(() => {
@@ -963,7 +1147,7 @@ function processCombatRound(attribute) {
       setTimeout(() => {
         state.isAnimating = false;
         const nextRoundBtn = document.getElementById('btn-next-round');
-        nextRoundBtn?.classList.remove('hidden');
+        nextRoundBtn?.classList.remove('invisible');
         checkEvolutionAvailability();
       }, wait(1200));
     }, 650);
@@ -984,6 +1168,69 @@ function showFloatingDamage(containerId, text) {
   setTimeout(() => {
     dmgEl.remove();
   }, 1200);
+}
+
+// Número de dano subindo da barra de HP de quem perdeu a rodada
+function showHpDamage(side, damage) {
+  const fill = document.getElementById(side === 'cpu' ? 'cpu-hp-fill' : 'player-hp-fill');
+  const info = fill?.closest('.combatant-info');
+  if (!info) return;
+
+  const el = document.createElement('div');
+  el.className = 'hp-damage-float';
+  el.textContent = `-${damage}`;
+  info.appendChild(el);
+  setTimeout(() => el.remove(), 1400);
+}
+
+// ==========================================================================
+// Jogar agora: baralho aleatório do inventário, aposta na carta mais comum
+// (menor perda possível) e moeda sorteada sem tela. Cinco telas viram uma.
+// ==========================================================================
+const RANK_ORDER = { C: 0, B: 1, A: 2, S: 3, SS: 4 };
+
+function startQuickPlay() {
+  const inventory = getInventory();
+  const needed = requiredDeckSize();
+
+  // Sem cartas suficientes pra dificuldade escolhida: avisa no próprio menu
+  // (alert bloqueia e sai do contexto) e leva ao deck builder.
+  if (inventory.length < needed) {
+    const hint = document.getElementById('menu-quick-warning');
+    if (hint) {
+      hint.textContent = t('menu.quickNeedCards', { count: needed });
+      hint.classList.remove('hidden');
+      setTimeout(() => hint.classList.add('hidden'), 6000);
+    }
+    openDeckBuilder(selectedDifficulty);
+    return;
+  }
+
+  const shuffled = [...inventory].sort(() => Math.random() - 0.5);
+  const deck = shuffled.slice(0, needed);
+  const wagerCard = [...deck].sort((a, b) => (RANK_ORDER[a.rank] ?? 0) - (RANK_ORDER[b.rank] ?? 0))[0];
+
+  startNewGameWithPlayerDeck(selectedDifficulty, deck, wagerCard);
+
+  const toss = resolveCoinToss(Math.random() < 0.5 ? 'cara' : 'coroa');
+  sound.playCoinLand();
+
+  showScreen('battle');
+  renderArena();
+
+  const note = document.getElementById('arena-coin-note');
+  if (note) {
+    const resultName = toss.result === 'cara' ? t('coin.cara') : t('coin.coroa');
+    note.textContent = t('battle.coinNote', {
+      result: resultName,
+      who: toss.playerStarts ? t('battle.coinYou') : t('battle.coinCpu')
+    });
+    note.classList.remove('hidden');
+  }
+
+  if (state.currentTurn === 'cpu') {
+    triggerCpuTurn();
+  }
 }
 
 // Verifica se há cartas para evoluir e ativa o botão correspondente
@@ -1115,7 +1362,7 @@ function handleGameOver(overInfo) {
       </div>
       <div class="stat-box">
         <div class="stat-box-label">${t('gameover.pokedexTotal')}</div>
-        <div class="stat-box-value">${collectedIds.size} / ${GEN1_POKEMON_BASE.length}</div>
+        <div class="stat-box-value">${ownedPokemonIds().size} / ${GEN1_POKEMON_BASE.length}</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">${t('gameover.lifetimeWins')}</div>
@@ -1260,13 +1507,14 @@ function renderPokedexGrid(filterText) {
     return;
   }
 
+  const ownedIds = ownedPokemonIds();
   const progressEl = document.getElementById('pokedex-progress');
-  if (progressEl) progressEl.textContent = t('pokedex.progress', { count: collectedIds.size, total: GEN1_POKEMON_BASE.length });
+  if (progressEl) progressEl.textContent = t('pokedex.progress', { count: ownedIds.size, total: GEN1_POKEMON_BASE.length });
 
   grid.innerHTML = list.map(p => {
     const isPlayer = p.id === pokedexPlayerId;
     const isCpu = p.id === pokedexCpuId;
-    const isCaptured = collectedIds.has(p.id);
+    const isCaptured = ownedIds.has(p.id);
     return `
       <div class="pokedex-mini-card ${isPlayer ? 'is-player' : ''} ${isCpu ? 'is-cpu' : ''}" data-id="${p.id}">
         ${isCaptured ? '<span class="pokedex-mini-badge" title="Capturado">✓</span>' : ''}
@@ -1446,7 +1694,7 @@ function setupDeckBuilder() {
     if (deckBuilderSelection.length >= requiredDeckSize()) return;
 
     const id = Number(btn.dataset.id);
-    const inventory = state.playerInventory || loadInventory() || [];
+    const inventory = getInventory();
     const selectedUids = new Set(deckBuilderSelection.map(c => c.uid));
     const availableCard = inventory.find(c => c.id === id && !selectedUids.has(c.uid));
 
@@ -1469,7 +1717,7 @@ function setupDeckBuilder() {
 
   document.getElementById('btn-deckbuilder-random')?.addEventListener('click', () => {
     sound.playClick();
-    const inventory = state.playerInventory || loadInventory() || [];
+    const inventory = getInventory();
     const selectedUids = new Set(deckBuilderSelection.map(c => c.uid));
     const pool = inventory.filter(c => !selectedUids.has(c.uid));
 
@@ -1505,7 +1753,7 @@ function renderDeckBuilderGrid(filterText) {
   const grid = document.getElementById('deckbuilder-grid');
   if (!grid) return;
 
-  const inventory = state.playerInventory || loadInventory() || [];
+  const inventory = getInventory();
   const grouped = {};
   inventory.forEach(card => {
     if (!grouped[card.id]) {
@@ -1857,7 +2105,7 @@ function setupCollectionToolbar() {
 }
 
 function updateCollectionDashboard() {
-  const inventory = state.playerInventory || loadInventory() || [];
+  const inventory = getInventory();
   const uniqueIds = new Set(inventory.map(c => c.id));
   const totalGen1 = GEN1_POKEMON_BASE.length;
   const percentage = ((uniqueIds.size / totalGen1) * 100).toFixed(1);
@@ -1895,7 +2143,7 @@ function renderCollectionGridAndInspector() {
   const grid = document.getElementById('collection-cards-grid');
   if (!grid) return;
 
-  const inventory = state.playerInventory || loadInventory() || [];
+  const inventory = getInventory();
 
   // Agrupa cópias do inventário
   const grouped = {};
@@ -2159,7 +2407,7 @@ function setupStarterModal(starterCards) {
   const boosterPack = document.getElementById('starter-pack-booster');
   const openBtn = document.getElementById('btn-starter-open');
   const skipBtn = document.getElementById('btn-starter-skip');
-  const confirmBtn = document.getElementById('btn-starter-confirm');
+  const confirmBtn = document.getElementById('starter-actions');
   const summaryEl = document.getElementById('starter-summary-stats');
   const grid = document.getElementById('starter-cards-grid');
 
@@ -2183,12 +2431,13 @@ function setupStarterModal(starterCards) {
   });
 
   if (summaryEl) {
+    const rankLabel = (rank, n) => `${n} ${n === 1 ? t(`rank.${rank}`) : t(`rankPlural.${rank}`)}`;
     summaryEl.innerHTML = `
-      ${counts.SS > 0 ? `<div class="starter-summary-pill" style="border-color: #ff0055; color: #ff0055;">👑 ${counts.SS} Lendário${counts.SS > 1 ? 's' : ''}</div>` : ''}
-      ${counts.S > 0 ? `<div class="starter-summary-pill" style="border-color: #a855f7; color: #c084fc;">🔥 ${counts.S} Épico${counts.S > 1 ? 's' : ''}</div>` : ''}
-      ${counts.A > 0 ? `<div class="starter-summary-pill" style="border-color: #3b82f6; color: #60a5fa;">💎 ${counts.A} Raro${counts.A > 1 ? 's' : ''}</div>` : ''}
-      ${counts.B > 0 ? `<div class="starter-summary-pill" style="border-color: #10b981; color: #34d399;">⚡ ${counts.B} Incomum${counts.B > 1 ? 'ns' : ''}</div>` : ''}
-      <div class="starter-summary-pill" style="border-color: #64748b; color: #94a3b8;">⚪ ${counts.C} Comum${counts.C > 1 ? 'ns' : ''}</div>
+      ${counts.SS > 0 ? `<div class="starter-summary-pill" style="border-color: #ff0055; color: #ff0055;">👑 ${rankLabel('SS', counts.SS)}</div>` : ''}
+      ${counts.S > 0 ? `<div class="starter-summary-pill" style="border-color: #a855f7; color: #c084fc;">🔥 ${rankLabel('S', counts.S)}</div>` : ''}
+      ${counts.A > 0 ? `<div class="starter-summary-pill" style="border-color: #3b82f6; color: #60a5fa;">💎 ${rankLabel('A', counts.A)}</div>` : ''}
+      ${counts.B > 0 ? `<div class="starter-summary-pill" style="border-color: #10b981; color: #34d399;">⚡ ${rankLabel('B', counts.B)}</div>` : ''}
+      <div class="starter-summary-pill" style="border-color: #64748b; color: #94a3b8;">⚪ ${rankLabel('C', counts.C)}</div>
     `;
   }
 

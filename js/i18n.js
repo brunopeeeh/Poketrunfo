@@ -22,7 +22,8 @@ const DICT = {
       ariaVolume: 'Volume do som',
       ariaLang: 'Alternar Idioma',
       ariaInventory: 'Ver minha coleção de cartas',
-      ariaBooster: 'Abrir booster de cartas'
+      ariaBooster: 'Abrir booster de cartas',
+      ariaHome: 'Voltar ao menu'
     },
     menu: {
       subtitle: 'Colecione, dispute atributos da 1ª Geração e evolua seus Pokémon!',
@@ -35,7 +36,10 @@ const DICT = {
       detailEasy: '10 Cartas no Baralho',
       detailMedium: '5 Cartas no Baralho',
       detailHard: '3 Cartas no Baralho',
-      startBtn: 'MONTAR BARALHO ⚡'
+      startBtn: '🃏 Montar meu baralho',
+      quickBtn: '⚡ JOGAR AGORA',
+      quickHint: 'Baralho automático, sem aposta e moeda sorteada na hora.',
+      quickNeedCards: 'Você precisa de pelo menos {{count}} cartas na coleção para jogar rápido.'
     },
     deckbuilder: {
       title: 'MONTE SEU BARALHO',
@@ -84,7 +88,19 @@ const DICT = {
       bonusApplied: '✨ Bônus Elemental de +20% aplicado!',
       penaltyApplied: '⚠️ Penalidade de -20% por desvantagem!',
       strongAgainst: 'Forte contra',
-      weakTo: 'Fraco contra'
+      weakTo: 'Fraco contra',
+      bestStat: 'Melhor atributo desta carta',
+      tapToConfirm: 'Toque de novo em {{attr}} ou confirme abaixo.',
+      confirmAttr: '⚔️ DISPUTAR {{attr}}',
+      scoreYou: 'Você',
+      scoreCpu: 'CPU',
+      disputeOf: 'Disputa por {{attr}}',
+      detailCpuLost: 'Computador perdeu {{dmg}} HP',
+      detailPlayerLost: 'Você perdeu {{dmg}} HP',
+      detailTie: 'As cartas foram para o Pote de Disputa',
+      coinNote: '🪙 Caiu {{result}}: {{who}} começa!',
+      coinYou: 'você',
+      coinCpu: 'o Computador'
     },
     stat: {
       hp: 'HP',
@@ -156,7 +172,7 @@ const DICT = {
     pokedex: {
       title: 'Pokédex de Consulta',
       subtitle: 'Roda a mesma função de vantagem elemental usada na batalha — o resultado aqui é sempre igual ao da arena.',
-      progress: '{{count}} / {{total}} Pokémon',
+      progress: '{{count}} / {{total}} na coleção',
       tabCatalog: '📖 Catálogo 151',
       tabVs: '⚖️ Simulador Elemental (VS)',
       tabChart: '📊 Tabela de Tipos',
@@ -180,6 +196,19 @@ const DICT = {
       S: 'Épico',
       SS: 'Lendário'
     },
+    rankPlural: {
+      C: 'Comuns',
+      B: 'Incomuns',
+      A: 'Raros',
+      S: 'Épicos',
+      SS: 'Lendários'
+    },
+    leave: {
+      title: 'Sair da partida?',
+      text: 'A partida em andamento será encerrada sem resultado. Sua carta apostada continua com você.',
+      cancel: 'Continuar jogando',
+      confirm: 'Sair'
+    },
     booster: {
       modalTitle: '🎁 Abertura de Booster!',
       subtitle: 'Você abriu um pacote com 5 cartas aleatórias!',
@@ -198,7 +227,8 @@ const DICT = {
       openBtn: '✨ TOQUE PARA ABRIR O PACOTE! ✨',
       revealTitle: '🎉 Suas 20 Cartas Iniciais!',
       skipBtn: '⏩ Pular Animação',
-      btn: 'MONTAR MEU BARALHO ⚡'
+      btn: '🃏 Montar meu baralho',
+      quickBtn: '⚡ JOGAR AGORA'
     },
     wager: {
       title: '⚔️ Aposta da Partida (Ante)',
@@ -259,7 +289,8 @@ const DICT = {
       ariaVolume: 'Sound volume',
       ariaLang: 'Switch Language',
       ariaInventory: 'View card collection',
-      ariaBooster: 'Open card booster'
+      ariaBooster: 'Open card booster',
+      ariaHome: 'Back to menu'
     },
     menu: {
       subtitle: 'Collect, battle 1st Gen attributes, and evolve your Pokémon!',
@@ -272,7 +303,10 @@ const DICT = {
       detailEasy: '10 Cards in Deck',
       detailMedium: '5 Cards in Deck',
       detailHard: '3 Cards in Deck',
-      startBtn: 'BUILD DECK ⚡'
+      startBtn: '🃏 Build my deck',
+      quickBtn: '⚡ PLAY NOW',
+      quickHint: 'Auto deck, no wager, instant coin toss.',
+      quickNeedCards: 'You need at least {{count}} cards in your collection for quick play.'
     },
     deckbuilder: {
       title: 'BUILD YOUR DECK',
@@ -321,7 +355,19 @@ const DICT = {
       bonusApplied: '✨ +20% Elemental Bonus applied!',
       penaltyApplied: '⚠️ -20% Penalty for disadvantage!',
       strongAgainst: 'Strong against',
-      weakTo: 'Weak to'
+      weakTo: 'Weak to',
+      bestStat: 'Best attribute on this card',
+      tapToConfirm: 'Tap {{attr}} again or confirm below.',
+      confirmAttr: '⚔️ BATTLE WITH {{attr}}',
+      scoreYou: 'You',
+      scoreCpu: 'CPU',
+      disputeOf: 'Battle on {{attr}}',
+      detailCpuLost: 'Computer lost {{dmg}} HP',
+      detailPlayerLost: 'You lost {{dmg}} HP',
+      detailTie: 'Cards went to the Dispute Pot',
+      coinNote: '🪙 Landed on {{result}}: {{who}} start!',
+      coinYou: 'you',
+      coinCpu: 'the Computer'
     },
     stat: {
       hp: 'HP',
@@ -393,7 +439,7 @@ const DICT = {
     pokedex: {
       title: 'Reference Pokédex',
       subtitle: 'Runs the exact same elemental advantage function used in battle — the result here always matches the arena.',
-      progress: '{{count}} / {{total}} Pokémon',
+      progress: '{{count}} / {{total}} in collection',
       tabCatalog: '📖 151 Catalog',
       tabVs: '⚖️ Type Simulator (VS)',
       tabChart: '📊 Type Chart',
@@ -417,6 +463,19 @@ const DICT = {
       S: 'Epic',
       SS: 'Legendary'
     },
+    rankPlural: {
+      C: 'Commons',
+      B: 'Uncommons',
+      A: 'Rares',
+      S: 'Epics',
+      SS: 'Legendaries'
+    },
+    leave: {
+      title: 'Leave the match?',
+      text: 'The match in progress will end with no result. Your wagered card stays with you.',
+      cancel: 'Keep playing',
+      confirm: 'Leave'
+    },
     booster: {
       modalTitle: '🎁 Booster Pack Opening!',
       subtitle: 'You opened a pack with 5 random cards!',
@@ -435,7 +494,8 @@ const DICT = {
       openBtn: '✨ TAP TO OPEN PACK! ✨',
       revealTitle: '🎉 Your 20 Starter Cards!',
       skipBtn: '⏩ Skip Animation',
-      btn: 'BUILD MY DECK ⚡'
+      btn: '🃏 Build my deck',
+      quickBtn: '⚡ PLAY NOW'
     },
     wager: {
       title: '⚔️ Match Wager (Ante)',
