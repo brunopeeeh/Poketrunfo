@@ -3722,3 +3722,72 @@ body {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Cabeçalho enxuto durante a partida
+   Na moeda e na arena o jogador está num fluxo focado. Coleção, Pokédex e
+   Booster não têm função ali — e o Booster ainda pisca competindo com o
+   combate. Saem.
+   Regras fica: é ajuda contextual num modal, não tira ninguém da partida.
+   Sem ela, quem travar numa dúvida teria de sair da arena e perder o jogo.
+   A Pokédex está coberta pelo "Analisar Confronto", que já abre o confronto
+   atual direto.
+   ========================================================================== */
+body[data-screen="battle"] #btn-inventory,
+body[data-screen="coin"] #btn-inventory,
+body[data-screen="battle"] #btn-pokedex,
+body[data-screen="coin"] #btn-pokedex,
+body[data-screen="battle"] #btn-booster-claim,
+body[data-screen="coin"] #btn-booster-claim,
+body[data-screen="battle"] .volume-slider,
+body[data-screen="coin"] .volume-slider,
+body[data-screen="battle"] #btn-lang,
+body[data-screen="coin"] #btn-lang,
+body[data-screen="battle"] .header-divider,
+body[data-screen="coin"] .header-divider {
+  display: none;
+}
+
+/* Com um botão só, a navegação não precisa da linha inteira: entra na mesma
+   linha dos controles e o cabeçalho fecha em uma faixa. */
+body[data-screen="battle"] .header-nav-group,
+body[data-screen="coin"] .header-nav-group {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Sem a navegação, o cabeçalho cabe numa linha só — no celular isso devolve
+   cerca de 55px de altura para a arena. */
+body[data-screen="battle"] .app-header,
+body[data-screen="coin"] .app-header {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+@media (max-width: 600px) {
+  body[data-screen="battle"] .header-settings-group,
+  body[data-screen="coin"] .header-settings-group {
+    order: 1;
+    width: auto;
+    margin-left: auto;
+  }
+
+  /* Regras vira só ícone aqui, como os demais controles da faixa. */
+  body[data-screen="battle"] .header-nav-group,
+  body[data-screen="coin"] .header-nav-group {
+    order: 2;
+    margin-left: 0;
+  }
+
+  body[data-screen="battle"] #btn-rules > span:not(:first-child),
+  body[data-screen="coin"] #btn-rules > span:not(:first-child) {
+    display: none;
+  }
+
+  body[data-screen="battle"] #btn-rules,
+  body[data-screen="coin"] #btn-rules {
+    width: 34px;
+    justify-content: center;
+    padding: 6px 0;
+  }
+}
