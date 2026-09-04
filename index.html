@@ -112,6 +112,7 @@
           <button class="start-btn" id="btn-quick-play" data-i18n="menu.quickBtn">⚡ JOGAR AGORA</button>
           <p class="menu-hint" data-i18n="menu.quickHint">Baralho automático, sem aposta e moeda sorteada na hora.</p>
           <p class="menu-warning hidden" id="menu-quick-warning" role="status"></p>
+          <button class="header-btn menu-secondary-btn" id="btn-trainers" data-i18n="menu.trainersBtn">🏆 Desafiar treinador</button>
           <button class="header-btn menu-secondary-btn" id="btn-start-game" data-i18n="menu.startBtn">🃏 Montar meu baralho</button>
         </div>
       </div>
@@ -217,6 +218,22 @@
     </section>
 
     <!-- =======================================================================
+         TELA 1.4: SELEÇÃO DE TREINADOR (NPCs)
+         ======================================================================= -->
+    <section id="screen-trainers" class="game-screen hidden">
+      <div class="menu-card trainers-card">
+        <h2 class="menu-title" style="font-size: 1.8rem;" data-i18n="trainers.title">DESAFIAR TREINADOR</h2>
+        <p class="menu-subtitle" data-i18n="trainers.subtitle">Cada treinador usa um tipo. Monte o baralho pensando na fraqueza dele!</p>
+
+        <div class="trainers-grid" id="trainers-grid">
+          <!-- Renderizado via JavaScript -->
+        </div>
+
+        <button class="header-btn menu-secondary-btn" id="btn-trainers-back" style="margin-top: 1.2rem;" data-i18n="deckbuilder.back">← Voltar</button>
+      </div>
+    </section>
+
+    <!-- =======================================================================
          TELA 1.5: MONTAGEM DE BARALHO (DECK BUILDER)
          ======================================================================= -->
     <section id="screen-deckbuilder" class="game-screen hidden">
@@ -224,6 +241,9 @@
         <h2 class="menu-title" style="font-size: 1.8rem;" data-i18n="deckbuilder.title">MONTE SEU BARALHO</h2>
         <p class="menu-subtitle" id="deckbuilder-subtitle" style="margin-bottom: 1rem;"></p>
         <p class="pokedex-subtitle" id="deckbuilder-progress" style="margin-bottom: 1rem;"></p>
+
+        <!-- Contra quem você vai jogar: o tipo é a informação estratégica -->
+        <div class="deckbuilder-opponent hidden" id="deckbuilder-opponent"></div>
 
         <div class="pokedex-slots" id="deckbuilder-tray" style="flex-wrap: wrap;"></div>
 

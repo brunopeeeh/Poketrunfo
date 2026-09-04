@@ -11,6 +11,7 @@ const LIFETIME_KEY = 'poketrunfo_lifetime_v1';
 const LANG_KEY = 'poketrunfo_lang_v1';
 const INVENTORY_KEY = 'poketrunfo_inventory_v2';
 const BOOSTER_NEXT_KEY = 'poketrunfo_booster_next_v1';
+const BADGES_KEY = 'poketrunfo_badges_v1';
 
 // Tempo padrão de recarga do booster: 4 horas (em milissegundos)
 export const BOOSTER_COOLDOWN_MS = 4 * 60 * 60 * 1000;
@@ -129,5 +130,23 @@ export function saveLanguage(lang) {
     localStorage.setItem(LANG_KEY, JSON.stringify(lang));
   } catch {
     // idem
+  }
+}
+
+// Treinadores (NPCs) já derrotados — dá sensação de progressão entre partidas.
+export function loadBadges() {
+  try {
+    const raw = localStorage.getItem(BADGES_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (err) {
+    return new Set();
+  }
+}
+
+export function saveBadges(badgeSet) {
+  try {
+    localStorage.setItem(BADGES_KEY, JSON.stringify([...badgeSet]));
+  } catch (err) {
+    // localStorage indisponível: progresso só não persiste entre sessões
   }
 }
