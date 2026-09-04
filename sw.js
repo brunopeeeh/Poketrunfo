@@ -11,7 +11,7 @@
  *    HTTP normal do navegador já cuida bem dessas imagens, então o SW fica
  *    fora do caminho delas.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const SHELL_CACHE = `poketrunfo-shell-${CACHE_VERSION}`;
 
 const SHELL_FILES = [
@@ -29,6 +29,7 @@ const SHELL_FILES = [
   './js/storage.js',
   './js/audio.js',
   './js/i18n.js',
+  './js/npcs.js',
   './logo.png',
   './poke_trunfo_logo-removebg-preview.png',
   './verso.jpg',

@@ -23,9 +23,12 @@ import {
   saveInventory,
   loadNextBoosterTime,
   saveNextBoosterTime,
-  isBoosterAvailable
+  isBoosterAvailable,
+  loadBadges,
+  saveBadges
 } from './storage.js';
 import { t, getLang, setLang, applyStaticI18n } from './i18n.js';
+import { NPCS, getNpcById } from './npcs.js';
 import {
   startNewGame,
   startNewGameWithPlayerDeck,
@@ -47,7 +50,8 @@ const screens = {
   deckbuilder: document.getElementById('screen-deckbuilder'),
   wager: document.getElementById('screen-wager'),
   coin: document.getElementById('screen-coin'),
-  battle: document.getElementById('screen-battle')
+  battle: document.getElementById('screen-battle'),
+  trainers: document.getElementById('screen-trainers')
 };
 
 const modals = {
@@ -344,6 +348,10 @@ const wait = (ms) => fastMode ? Math.round(ms / 3) : ms;
 // Dificuldade escolhida no menu, usada ao abrir o Deck Builder
 let selectedDifficulty = 'easy';
 
+// Treinador escolhido para a próxima partida (null = CPU aleatória de sempre)
+let selectedNpc = null;
+let earnedBadges = loadBadges();
+
 // Configura ouvintes de eventos
 function setupEventListeners() {
   // Controle de Áudio
@@ -481,13 +489,26 @@ function setupEventListeners() {
   document.getElementById('btn-starter-quick')?.addEventListener('click', () => {
     sound.playClick();
     closeModal(modals.starter);
+    selectedNpc = null;
     startQuickPlay();
   });
 
   // Menu: Jogar agora
   document.getElementById('btn-quick-play')?.addEventListener('click', () => {
     sound.playClick();
+    selectedNpc = null;
     startQuickPlay();
+  });
+
+  // Menu: Desafiar treinador
+  document.getElementById('btn-trainers')?.addEventListener('click', () => {
+    sound.playClick();
+    openTrainersScreen();
+  });
+
+  document.getElementById('btn-trainers-back')?.addEventListener('click', () => {
+    sound.playClick();
+    showScreen('menu');
   });
 
   // Wager Screen Confirm & Back
@@ -495,7 +516,7 @@ function setupEventListeners() {
   wagerConfirmBtn?.addEventListener('click', () => {
     sound.playClick();
     const wagerCard = deckBuilderSelection[selectedWagerIndex] || deckBuilderSelection[0];
-    startNewGameWithPlayerDeck(selectedDifficulty, deckBuilderSelection, wagerCard);
+    startNewGameWithPlayerDeck(selectedDifficulty, deckBuilderSelection, wagerCard, selectedNpc);
     setupCoinScreen();
     showScreen('coin');
   });
@@ -510,6 +531,7 @@ function setupEventListeners() {
   const startBtn = document.getElementById('btn-start-game');
   startBtn?.addEventListener('click', () => {
     sound.playClick();
+    selectedNpc = null;
     openDeckBuilder(selectedDifficulty);
   });
 
@@ -698,15 +720,24 @@ function updateStatusBars() {
   const cpuHpText = document.getElementById('cpu-hp-text');
   const cpuDeckCount = document.getElementById('cpu-deck-count');
 
-  const cpuHpPct = Math.max(0, (state.cpuHp / state.initialHp) * 100);
+  const cpuMaxHp = state.initialCpuHp || state.initialHp;
+  const cpuHpPct = Math.max(0, (state.cpuHp / cpuMaxHp) * 100);
   if (cpuHpBar) {
     cpuHpBar.style.width = `${cpuHpPct}%`;
     cpuHpBar.className = 'hp-bar-fill';
     if (cpuHpPct <= 25) cpuHpBar.classList.add('critical');
     else if (cpuHpPct <= 50) cpuHpBar.classList.add('warning');
   }
-  if (cpuHpText) cpuHpText.textContent = `${state.cpuHp} / ${state.initialHp} HP`;
+  if (cpuHpText) cpuHpText.textContent = `${state.cpuHp} / ${cpuMaxHp} HP`;
   if (cpuDeckCount) cpuDeckCount.textContent = t('battle.cardsCount', { count: state.cpuDeck.length });
+
+  // Contra um treinador, o painel mostra o nome dele no lugar de "Computador"
+  const cpuNameEl = document.querySelector('#screen-battle .combatant-panel:last-child .combatant-name');
+  if (cpuNameEl) {
+    cpuNameEl.textContent = state.activeNpc
+      ? `${t(`npc.${state.activeNpc.id}.emoji`)} ${t(`npc.${state.activeNpc.id}.name`)}`
+      : t('battle.cpu');
+  }
 }
 
 // Atualiza painel central
@@ -1210,7 +1241,7 @@ function startQuickPlay() {
   const deck = shuffled.slice(0, needed);
   const wagerCard = [...deck].sort((a, b) => (RANK_ORDER[a.rank] ?? 0) - (RANK_ORDER[b.rank] ?? 0))[0];
 
-  startNewGameWithPlayerDeck(selectedDifficulty, deck, wagerCard);
+  startNewGameWithPlayerDeck(selectedDifficulty, deck, wagerCard, selectedNpc);
 
   const toss = resolveCoinToss(Math.random() < 0.5 ? 'cara' : 'coroa');
   sound.playCoinLand();
@@ -1330,8 +1361,34 @@ function handleGameOver(overInfo) {
     }
   }
 
+  // Vitória contra treinador rende medalha (progresso entre partidas)
+  let badgeFeedback = '';
+  if (state.activeNpc) {
+    const npcName = t(`npc.${state.activeNpc.id}.name`);
+    if (overInfo.playerWon) {
+      const isNew = !earnedBadges.has(state.activeNpc.id);
+      earnedBadges.add(state.activeNpc.id);
+      saveBadges(earnedBadges);
+      badgeFeedback = `<div style="color: #fbbf24; font-weight: 800; margin-top: 10px;">${
+        isNew ? t('trainers.badgeEarned', { name: npcName }) : t('trainers.beatAgain', { name: npcName })
+      }</div>`;
+    } else {
+      badgeFeedback = `<div style="color: #94a3b8; margin-top: 10px;">${t('trainers.lostTo', { name: npcName })}</div>`;
+    }
+  }
+
+  // Contra um treinador, o motivo cita o nome dele em vez de "o Computador"
+  const npcReasonKeys = {
+    cpu_hp_zero: 'gameover.reasonNpcHpZero',
+    cpu_no_cards: 'gameover.reasonNpcNoCards'
+  };
+  const npcName = state.activeNpc ? t(`npc.${state.activeNpc.id}.name`) : '';
+  const reasonKey = (state.activeNpc && npcReasonKeys[overInfo.reasonCode])
+    || reasonKeys[overInfo.reasonCode]
+    || '';
+
   if (reasonText) {
-    reasonText.innerHTML = (t(reasonKeys[overInfo.reasonCode] || '')) + wagerFeedback;
+    reasonText.innerHTML = (reasonKey ? t(reasonKey, { name: npcName }) : '') + wagerFeedback + badgeFeedback;
   }
 
   // Soma o resultado desta partida às estatísticas persistidas entre partidas
@@ -1670,11 +1727,83 @@ function requiredDeckSize() {
   return (DIFFICULTY_CONFIG[selectedDifficulty] || DIFFICULTY_CONFIG.easy).cardsCount;
 }
 
+// ==========================================================================
+// Treinadores (NPCs): a informação que importa aqui é o TIPO do oponente —
+// é ela que transforma a montagem de baralho numa decisão de verdade.
+// ==========================================================================
+function openTrainersScreen() {
+  renderTrainersGrid();
+  showScreen('trainers');
+}
+
+function renderTrainersGrid() {
+  const grid = document.getElementById('trainers-grid');
+  if (!grid) return;
+
+  grid.innerHTML = NPCS.map(npc => {
+    const beaten = earnedBadges.has(npc.id);
+    const typePills = (npc.types || []).map(ty => {
+      const info = TYPE_TRANSLATIONS[ty] || { color: '#666' };
+      return `<span class="type-pill" style="background-color: ${info.color}">${getTypeName(ty, getLang())}</span>`;
+    }).join('') || `<span class="type-pill" style="background-color: #64748b">${t('trainers.mixed')}</span>`;
+
+    return `
+      <button type="button" class="trainer-card ${beaten ? 'beaten' : ''}" data-npc="${npc.id}" style="--trainer-accent: ${npc.accent}">
+        ${beaten ? `<span class="trainer-badge" title="${t('trainers.defeated')}">🏅</span>` : ''}
+        <img src="${getPokemonArtwork(npc.avatarId)}" alt="" class="trainer-avatar" loading="lazy">
+        <span class="trainer-name">${t(`npc.${npc.id}.emoji`)} ${t(`npc.${npc.id}.name`)}</span>
+        <span class="trainer-title">${t(`npc.${npc.id}.title`)}</span>
+        <div class="trainer-types">${typePills}</div>
+        <p class="trainer-tip">${t(`npc.${npc.id}.tip`)}</p>
+        <div class="trainer-meta">
+          <span>${t('trainers.maxRank', { rank: npc.maxRank })}</span>
+          <span>❤️ ${Math.round(npc.hpMultiplier * 100)}%</span>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('.trainer-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sound.playClick();
+      selectedNpc = getNpcById(btn.dataset.npc);
+      openDeckBuilder(selectedDifficulty);
+    });
+  });
+}
+
+function updateDeckBuilderOpponentNotice() {
+  const notice = document.getElementById('deckbuilder-opponent');
+  if (!notice) return;
+
+  if (!selectedNpc) {
+    notice.classList.add('hidden');
+    return;
+  }
+
+  const types = (selectedNpc.types || []).map(ty => {
+    const info = TYPE_TRANSLATIONS[ty] || { color: '#666' };
+    return `<span class="type-pill" style="background-color: ${info.color}">${getTypeName(ty, getLang())}</span>`;
+  }).join('');
+
+  notice.innerHTML = `
+    <img src="${getPokemonArtwork(selectedNpc.avatarId)}" alt="" class="deckbuilder-opponent-art">
+    <div class="deckbuilder-opponent-text">
+      <strong>${t('deckbuilder.vs', { name: t(`npc.${selectedNpc.id}.name`) })}</strong>
+      <div class="deckbuilder-opponent-types">
+        ${types || `<span class="type-pill" style="background-color: #64748b">${t('trainers.mixed')}</span>`}
+      </div>
+    </div>
+  `;
+  notice.classList.remove('hidden');
+}
+
 function openDeckBuilder(difficulty) {
   selectedDifficulty = difficulty;
   deckBuilderSelection = [];
   const subtitle = document.getElementById('deckbuilder-subtitle');
   if (subtitle) subtitle.textContent = t('deckbuilder.subtitle', { count: requiredDeckSize() });
+  updateDeckBuilderOpponentNotice();
   renderDeckBuilderGrid('');
   renderDeckBuilderTray();
   showScreen('deckbuilder');
@@ -1739,7 +1868,7 @@ function setupDeckBuilder() {
 
   document.getElementById('btn-deckbuilder-back')?.addEventListener('click', () => {
     sound.playClick();
-    showScreen('menu');
+    showScreen(selectedNpc ? 'trainers' : 'menu');
   });
 
   document.getElementById('btn-deckbuilder-confirm')?.addEventListener('click', () => {

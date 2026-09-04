@@ -3,6 +3,7 @@
  */
 
 import { GEN1_POKEMON_BASE, createCardFromBase, drawWeightedPokemonList } from './api.js';
+import { buildNpcDeck, getAiProfile, expectedStatsFor } from './npcs.js';
 import { calculateTypeAdvantage } from './types.js';
 import { state, resetGameState } from './state.js';
 import { sound } from './audio.js';
@@ -58,11 +59,21 @@ export function startNewGame(difficulty = 'easy') {
 }
 
 // Inicializa uma nova partida com o baralho montado a partir do inventário e com cartas em aposta
-export function startNewGameWithPlayerDeck(difficulty, chosenCards, playerWagerCard = null) {
+export function startNewGameWithPlayerDeck(difficulty, chosenCards, playerWagerCard = null, npc = null) {
   resetGameState(difficulty);
   // Garante que cada carta no baralho seja uma cópia ativa independente para o duelo
   state.playerDeck = chosenCards.map(c => ({ ...c }));
-  state.cpuDeck = drawRandomDeck(state.initialCardsCount);
+
+  // Contra um treinador o baralho da CPU é temático (tipo + teto de rank) e o
+  // HP dele é escalado — é o que substitui um handicap artificial.
+  if (npc) {
+    state.activeNpc = npc;
+    state.cpuDeck = buildNpcDeck(npc, state.initialCardsCount);
+    state.initialCpuHp = Math.round(state.initialHp * (npc.hpMultiplier || 1));
+    state.cpuHp = state.initialCpuHp;
+  } else {
+    state.cpuDeck = drawRandomDeck(state.initialCardsCount);
+  }
 
   // Define a carta apostada pelo jogador
   const pWager = playerWagerCard || state.playerDeck[0];
@@ -220,23 +231,48 @@ export function performEvolution(pokemonId) {
 // IA do Computador para escolher o melhor atributo
 export function chooseCpuAttribute(cpuCard) {
   const stats = [
-    { attr: 'hp', name: 'HP', value: cpuCard.hp },
-    { attr: 'attack', name: 'Ataque', value: cpuCard.attack },
-    { attr: 'defense', name: 'Defesa', value: cpuCard.defense },
-    { attr: 'spAttack', name: 'Ataque Especial', value: cpuCard.spAttack },
-    { attr: 'spDefense', name: 'Defesa Especial', value: cpuCard.spDefense },
-    { attr: 'speed', name: 'Velocidade', value: cpuCard.speed }
+    { attr: 'hp', value: cpuCard.hp },
+    { attr: 'attack', value: cpuCard.attack },
+    { attr: 'defense', value: cpuCard.defense },
+    { attr: 'spAttack', value: cpuCard.spAttack },
+    { attr: 'spDefense', value: cpuCard.spDefense },
+    { attr: 'speed', value: cpuCard.speed }
   ];
 
-  // Ordena por maior valor
-  stats.sort((a, b) => b.value - a.value);
+  const profile = getAiProfile(state.activeNpc);
 
-  // 85% das vezes escolhe o maior stat, 15% das vezes pode variar para dinamismo
-  if (Math.random() < 0.85) {
-    return stats[0].attr;
+  // Gary escolhe pela MARGEM esperada, não pelo maior número: para cada
+  // atributo estima quanto o adversário provavelmente tem (média do tipo dele)
+  // e disputa onde a folga é maior. Só usa informação pública — os tipos, que
+  // estão visíveis na mesa. Aplicar o modificador elemental sozinho não
+  // adiantaria nada: ele multiplica todos os atributos igualmente e não muda
+  // qual é o maior.
+  if (profile.usesTypeAdvantage && state.playerDeck.length > 0) {
+    const playerCard = state.playerDeck[0];
+    const adv = calculateTypeAdvantage(playerCard, cpuCard, 'cpu');
+    const factor = adv?.cpuModifier ?? 1;
+    const expected = expectedStatsFor(playerCard.types);
+    stats.forEach(s => {
+      s.score = expected ? (s.value * factor) - expected[s.attr] : s.value * factor;
+    });
   } else {
-    return stats[1].attr;
+    stats.forEach(s => { s.score = s.value; });
   }
+
+  // Perfis com preferência (Brock, Misty) empurram seus atributos favoritos
+  // pra frente da fila. O peso é forte o bastante pra criar um padrão que o
+  // jogador aprende a ler e explorar, mas não a ponto de fazer o NPC escolher
+  // um atributo fraco quando tem outro muito superior — aí seria só burrice.
+  if (profile.priority) {
+    stats.forEach(s => {
+      const rank = profile.priority.indexOf(s.attr);
+      if (rank !== -1) s.score *= 1.6 - rank * 0.15;
+    });
+  }
+
+  stats.sort((a, b) => b.score - a.score);
+
+  return Math.random() < profile.errorRate ? stats[1].attr : stats[0].attr;
 }
 
 // Executa uma rodada da disputa com regras de vantagens elementais

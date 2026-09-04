@@ -32,6 +32,10 @@ export const state = {
   initialCardsCount: 10,
   playerHp: 1000,
   cpuHp: 1000,
+  // NPCs têm HP próprio (hpMultiplier), então a barra da CPU precisa da própria
+  // referência — usar initialHp para as duas deixaria a barra do NPC errada.
+  initialCpuHp: 1000,
+  activeNpc: null, // { id, types, maxRank, ai, ... } quando a partida é contra um treinador
   playerDeck: [],
   cpuDeck: [],
   playerInventory: [], // Coleção completa de cartas do jogador
@@ -62,6 +66,8 @@ export function resetGameState(difficultyKey = 'easy') {
   state.initialCardsCount = config.cardsCount;
   state.playerHp = config.hp;
   state.cpuHp = config.hp;
+  state.initialCpuHp = config.hp;
+  state.activeNpc = null;
   state.playerDeck = [];
   state.cpuDeck = [];
   state.activeWager = { playerCard: null, cpuCard: null };

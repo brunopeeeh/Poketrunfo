@@ -3544,3 +3544,181 @@ body {
   padding: 7px 10px;
   margin: 0;
 }
+
+/* ==========================================================================
+   Treinadores (NPCs): seleção de oponente e aviso no deck builder
+   ========================================================================== */
+.trainers-card {
+  max-width: 900px;
+}
+
+.trainers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 1.2rem;
+}
+
+.trainer-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--ink-soft);
+  border: 3px solid var(--ink-panel-2);
+  border-top: 5px solid var(--trainer-accent, var(--gold-foil));
+  border-radius: 6px 6px 12px 12px;
+  padding: 1rem 0.9rem;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.trainer-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--trainer-accent, var(--gold-foil));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5);
+}
+
+.trainer-card:active {
+  transform: translateY(1px);
+}
+
+.trainer-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.trainer-avatar {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+}
+
+.trainer-card.beaten .trainer-avatar {
+  opacity: 0.85;
+}
+
+.trainer-name {
+  font-family: 'Titan One', cursive;
+  font-weight: 400;
+  font-size: 1.15rem;
+  color: #f4f1e8;
+}
+
+.trainer-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--trainer-accent, var(--gold-foil));
+}
+
+.trainer-types {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 2px 0;
+}
+
+.trainer-tip {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--bone-dim);
+  margin: 0;
+}
+
+.trainer-meta {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ink-panel-2);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.52rem;
+  color: var(--bone-dim);
+}
+
+/* Aviso de oponente no deck builder */
+.deckbuilder-opponent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--ink-panel-2);
+  border-left: 4px solid var(--gold-foil);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.deckbuilder-opponent-art {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.deckbuilder-opponent-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.deckbuilder-opponent-text strong {
+  font-size: 0.92rem;
+  color: #f4f1e8;
+}
+
+.deckbuilder-opponent-types {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .trainers-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .trainer-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "avatar name"
+      "avatar title"
+      "avatar types"
+      "tip tip"
+      "meta meta";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 2px;
+    text-align: left;
+    padding: 0.9rem 0.8rem;
+  }
+
+  .trainer-avatar { grid-area: avatar; width: 64px; height: 64px; }
+  .trainer-name { grid-area: name; font-size: 1.05rem; }
+  .trainer-title { grid-area: title; font-size: 0.72rem; }
+  .trainer-types { grid-area: types; justify-content: flex-start; }
+  .trainer-tip { grid-area: tip; margin-top: 6px; font-size: 0.76rem; }
+  .trainer-meta { grid-area: meta; justify-content: flex-start; }
+
+  .trainer-card:hover {
+    transform: none;
+  }
+}

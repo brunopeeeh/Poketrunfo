@@ -37,6 +37,7 @@ const DICT = {
       detailMedium: '5 Cartas no Baralho',
       detailHard: '3 Cartas no Baralho',
       startBtn: '🃏 Montar meu baralho',
+      trainersBtn: '🏆 Desafiar treinador',
       quickBtn: '⚡ JOGAR AGORA',
       quickHint: 'Baralho automático, sem aposta e moeda sorteada na hora.',
       quickNeedCards: 'Você precisa de pelo menos {{count}} cartas na coleção para jogar rápido.'
@@ -54,7 +55,35 @@ const DICT = {
       full: 'Cheio',
       trayLabel: 'Seu Baralho:',
       trayEmpty: 'Nenhuma carta selecionada ainda.',
-      owned: 'Possui: {{count}}'
+      owned: 'Possui: {{count}}',
+      vs: 'Duelo contra {{name}}'
+    },
+    trainers: {
+      title: 'DESAFIAR TREINADOR',
+      subtitle: 'Cada treinador usa um tipo. Monte o baralho pensando na fraqueza dele!',
+      mixed: 'Variado',
+      maxRank: 'Até rank {{rank}}',
+      defeated: 'Treinador derrotado',
+      badgeEarned: '🏅 Nova medalha! Você derrotou {{name}} pela primeira vez!',
+      beatAgain: '🏅 Você derrotou {{name}} de novo!',
+      lostTo: '{{name}} venceu desta vez. Ajuste seu baralho e tente de novo!'
+    },
+    npc: {
+      brock: {
+        name: 'Brock', emoji: '🪨',
+        title: 'Líder de Pedra',
+        tip: 'Muralha de Pedra e Terra: aposta em Defesa. Ataques de Água e Planta o derrubam.'
+      },
+      misty: {
+        name: 'Misty', emoji: '💧',
+        title: 'Líder de Água',
+        tip: 'Duela pelo lado especial. Fraca contra Elétrico e Planta.'
+      },
+      gary: {
+        name: 'Gary', emoji: '⚡',
+        title: 'Rival',
+        tip: 'Baralho variado, sem fraqueza óbvia, e lê a vantagem elemental antes de escolher.'
+      }
     },
     coin: {
       title: 'SORTEIO DA MOEDA',
@@ -133,6 +162,8 @@ const DICT = {
       lose: '☠️ DERROTA!',
       reasonCpuHpZero: 'O HP do Computador chegou a 0!',
       reasonCpuNoCards: 'O Computador ficou sem cartas no baralho!',
+      reasonNpcHpZero: 'O HP de {{name}} chegou a 0!',
+      reasonNpcNoCards: '{{name}} ficou sem cartas no baralho!',
       reasonPlayerHpZero: 'Seu HP chegou a 0!',
       reasonPlayerNoCards: 'Você ficou sem cartas no baralho!',
       roundsWon: 'Rodadas Vencidas',
@@ -304,6 +335,7 @@ const DICT = {
       detailMedium: '5 Cards in Deck',
       detailHard: '3 Cards in Deck',
       startBtn: '🃏 Build my deck',
+      trainersBtn: '🏆 Challenge a trainer',
       quickBtn: '⚡ PLAY NOW',
       quickHint: 'Auto deck, no wager, instant coin toss.',
       quickNeedCards: 'You need at least {{count}} cards in your collection for quick play.'
@@ -321,7 +353,35 @@ const DICT = {
       full: 'Full',
       trayLabel: 'Your Deck:',
       trayEmpty: 'No cards selected yet.',
-      owned: 'Owned: {{count}}'
+      owned: 'Owned: {{count}}',
+      vs: 'Battling {{name}}'
+    },
+    trainers: {
+      title: 'CHALLENGE A TRAINER',
+      subtitle: 'Each trainer favours a type. Build your deck around their weakness!',
+      mixed: 'Mixed',
+      maxRank: 'Up to rank {{rank}}',
+      defeated: 'Trainer defeated',
+      badgeEarned: '🏅 New badge! You beat {{name}} for the first time!',
+      beatAgain: '🏅 You beat {{name}} again!',
+      lostTo: '{{name}} won this time. Tweak your deck and try again!'
+    },
+    npc: {
+      brock: {
+        name: 'Brock', emoji: '🪨',
+        title: 'Rock Leader',
+        tip: 'A Rock and Ground wall that leans on Defense. Water and Grass bring him down.'
+      },
+      misty: {
+        name: 'Misty', emoji: '💧',
+        title: 'Water Leader',
+        tip: 'Fights on the special side. Weak to Electric and Grass.'
+      },
+      gary: {
+        name: 'Gary', emoji: '⚡',
+        title: 'Rival',
+        tip: 'Mixed deck with no obvious weakness, and he reads type advantage before choosing.'
+      }
     },
     coin: {
       title: 'COIN TOSS',
@@ -400,6 +460,8 @@ const DICT = {
       lose: '☠️ DEFEAT!',
       reasonCpuHpZero: "The Computer's HP reached 0!",
       reasonCpuNoCards: 'The Computer ran out of deck cards!',
+      reasonNpcHpZero: "{{name}}'s HP reached 0!",
+      reasonNpcNoCards: '{{name}} ran out of deck cards!',
       reasonPlayerHpZero: 'Your HP reached 0!',
       reasonPlayerNoCards: 'You ran out of deck cards!',
       roundsWon: 'Rounds Won',
